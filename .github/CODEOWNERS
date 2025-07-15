@@ -1,11 +1,5 @@
-# CODEOWNERS file for talentradar-user-management-service-rw
-# This file defines code ownership for automatic review requests
+# CODEOWNERS file for talentradar-user-management-service-rw - Development Branch
+# Only .github directory has code owner requirements
 
-# GitHub configuration files - only final reviewers can approve changes
+# GitHub configuration files - Final reviewers only
 /.github/ @bikaze @muhirwaJD
-
-# Repository code - team reviewers
-* @AmaliTech-Training-Academy/backend-reviewers
-
-# Production changes - final reviewers
-* @AmaliTech-Training-Academy/final-reviewers
