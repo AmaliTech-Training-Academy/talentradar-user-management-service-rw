@@ -57,6 +57,10 @@ public class CustomUserDetails implements UserDetails {
         return user;
     }
 
+    public String getEmail() {
+        return user.getEmail();
+    }
+
     // Get user ID
     public UUID getUserId() {
         return user.getId();
