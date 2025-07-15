@@ -28,8 +28,8 @@ public class Role {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "role_name", nullable = false)
-    private String role_name;
+    @Column(name = "role_name", nullable = false, unique = true)
+    private String roleName;
 
     @OneToMany(mappedBy = "role")
     private List<User> users;
