@@ -45,16 +45,29 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
 
         String sessionId = request.getSession().getId();
 
-        Session session = Session.builder()
-                .sessionId(sessionId)
-                .id(user.getId())
-                .ipAddress(ip)
-                .deviceInfo(userAgent)
-                .createdAt(LocalDateTime.now())
-                .isActive(true)
-                .build();
+        // Check if session with this sessionId already exists
+        Session existing = userSessionRepository.findBySessionId(sessionId).orElse(null);
 
-        userSessionRepository.save(session);
+        if (existing == null) {
+            // create new
+            Session session = Session.builder()
+                    .sessionId(sessionId)
+                    .user(user)
+                    .ipAddress(ip)
+                    .deviceInfo(userAgent)
+                    .createdAt(LocalDateTime.now())
+                    .isActive(true)
+                    .build();
+            userSessionRepository.save(session);
+        } else {
+            // update fields
+            existing.setIpAddress(ip);
+            existing.setDeviceInfo(userAgent);
+            existing.setActive(true);
+            existing.setCreatedAt(LocalDateTime.now());
+            userSessionRepository.save(existing);
+        }
+
     }
 }
 
