@@ -6,6 +6,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,6 +17,7 @@ import com.talentradar.user_service.dto.LoginResponseDto;
 import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
+@Hidden
 public class GlobalExceptionHandler {
     // Handle invalid credentials exception
     @ExceptionHandler(BadCredentialsException.class)
