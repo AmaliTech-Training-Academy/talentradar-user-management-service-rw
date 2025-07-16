@@ -19,9 +19,9 @@ public class SessionService {
     private final UserSessionRepository userSessionRepository;
     private final SessionMapper sessionMapper;
 
-public Page<SessionResponseDto> getActiveSessions(Pageable pageable) {
-    Page<Session> sessionPage = this.userSessionRepository.findAll(pageable);
-    logger.info("Admin fetched active sessions");
-    return sessionPage.map(sessionMapper::toDto);
-}
+    public Page<SessionResponseDto> getActiveSessions(Pageable pageable) {
+        Page<Session> sessionPage = this.userSessionRepository.findAll(pageable);
+        logger.info("Admin fetched active sessions");
+        return sessionPage.map(sessionMapper::toDto);
+    }
 }
