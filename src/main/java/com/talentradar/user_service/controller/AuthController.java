@@ -2,21 +2,27 @@ package com.talentradar.user_service.controller;
 
 import java.util.Map;
 
-import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
 
+import com.talentradar.user_service.dto.CompleteRegistrationRequest;
+import com.talentradar.user_service.dto.InviteUserRequest;
 import com.talentradar.user_service.dto.LoginRequestDto;
-import com.talentradar.user_service.dto.*;
+import com.talentradar.user_service.dto.UserResponse;
+import com.talentradar.user_service.exception.InvalidTokenException;
 import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.service.AuthenticationService;
 import com.talentradar.user_service.service.UserService;
-import com.talentradar.user_service.exception.InvalidTokenException;
-import com.talentradar.user_service.exception.ResourceAlreadyExistsException;
-import com.talentradar.user_service.exception.ResourceNotFoundException;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
