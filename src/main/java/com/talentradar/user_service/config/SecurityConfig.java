@@ -33,10 +33,11 @@ public class SecurityConfig {
                 .httpBasic(AbstractHttpConfigurer::disable)
                 .cors(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/**")
-                        .permitAll()
-                        .anyRequest().authenticated())
-                .authenticationProvider(authenticationProvider());
+                        .anyRequest().permitAll())
+                .authenticationProvider(authenticationProvider()).exceptionHandling(ex -> ex
+                        .authenticationEntryPoint((request, response, authException) -> {
+                            response.sendError(401, "Unauthorized");
+                        }));
 
         return http.build();
     }
