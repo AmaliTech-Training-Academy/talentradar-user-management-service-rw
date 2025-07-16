@@ -1,8 +1,7 @@
-# CODEOWNERS file for talentradar-user-management-service-rw - Staging Branch
-# Backend team reviewers required for staging
+# Code owners for talentradar-user-management-service-rw
+# Global owners for all files (except .github/)
+*  @nccharles @ishimweeli
 
-# Global ownership - Backend team reviewers
-* @nkbtemmy2 @nccharles @ishimweeli @bumlev
+# GitHub folder specific owners
+.github/ @bikaze @muhirwaJD
 
-# GitHub configuration files - Final reviewers only
-/.github/ @bikaze @muhirwaJD

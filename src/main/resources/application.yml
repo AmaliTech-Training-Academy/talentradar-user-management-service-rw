@@ -6,6 +6,7 @@ spring:
   cloud:
     config:
       uri: ${SPRING_CLOUD_CONFIG_URI}
+
   session:
     store-type: redis
     timeout: 30m
@@ -14,7 +15,5 @@ spring:
     redis:
       host: ${REDIS_HOSTNAME}
       port: ${REDIS_PORT}
-
-
-
-
+  profiles:
+    active: prod
