@@ -7,8 +7,8 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
+import com.talentradar.user_service.dto.APIResponse;
 import com.talentradar.user_service.dto.LoginRequestDto;
-import com.talentradar.user_service.dto.LoginResponseDto;
 import com.talentradar.user_service.dto.UserDto;
 import com.talentradar.user_service.model.CustomUserDetails;
 import com.talentradar.user_service.security.JwtUtils;
@@ -44,14 +44,14 @@ public class AuthenticationService {
                                 .role(userDetails.getRoleName())
                                 .build();
 
-                // Create and return login response
-                LoginResponseDto loginResponseDto = LoginResponseDto.builder().status(true).message("Login successful")
-                                .errors(
-                                                null)
-                                .data(LoginResponseDto.Data.builder().user(userDto).build())
+                APIResponse<UserDto> apiResponse = APIResponse.<UserDto>builder()
+                                .status(true)
+                                .message("Login successful")
+                                .data(new APIResponse.Data<>(userDto))
+                                .errors(null)
                                 .build();
 
-                return Map.of("token", token, "loginResponse", loginResponseDto);
+                return Map.of("token", token, "loginResponse", apiResponse);
 
         }
 }

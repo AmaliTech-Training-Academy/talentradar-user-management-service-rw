@@ -4,7 +4,7 @@ import java.util.UUID;
 
 import org.springframework.stereotype.Service;
 
-import com.talentradar.user_service.dto.LoginResponseDto;
+import com.talentradar.user_service.dto.APIResponse;
 import com.talentradar.user_service.dto.UserDto;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.model.User;
@@ -18,7 +18,7 @@ public class UserService {
         this.userRepository = userRepository;
     }
 
-    public LoginResponseDto getMe(UUID userId) {
+    public APIResponse<UserDto> getMe(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         UserDto userDto = UserDto.builder()
@@ -30,11 +30,11 @@ public class UserService {
                 .build();
 
         // Create and return
-        LoginResponseDto loginResponseDto = LoginResponseDto.builder().status(true)
-                .message("User information retrieved successfully")
-                .errors(
-                        null)
-                .data(LoginResponseDto.Data.builder().user(userDto).build())
+        APIResponse<UserDto> loginResponseDto = APIResponse.<UserDto>builder()
+                .status(true)
+                .message("User retrieved successfully")
+                .data(new APIResponse.Data<>(userDto))
+                .errors(null)
                 .build();
         return loginResponseDto;
     }

@@ -8,7 +8,8 @@ import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.talentradar.user_service.dto.LoginResponseDto;
+import com.talentradar.user_service.dto.APIResponse;
+import com.talentradar.user_service.dto.UserDto;
 import com.talentradar.user_service.service.UserService;
 
 @RestController
@@ -22,12 +23,12 @@ public class UserController {
 
     // Define user-related endpoints here
     @GetMapping("/me")
-    public ResponseEntity<LoginResponseDto> getMe(@RequestHeader("X-User-Id") String userIdFromHeader) {
+    public ResponseEntity<APIResponse<UserDto>> getMe(@RequestHeader("X-User-Id") String userIdFromHeader) {
         // Get user id from header X-User-Id
         UUID userId = UUID.fromString(userIdFromHeader);
 
         // Load User from database
-        LoginResponseDto loginResponseDto = userService.getMe(userId);
+        APIResponse<UserDto> loginResponseDto = userService.getMe(userId);
 
         return ResponseEntity.ok(loginResponseDto);
     }
