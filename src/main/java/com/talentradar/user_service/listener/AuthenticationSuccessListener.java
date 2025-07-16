@@ -14,11 +14,13 @@ import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
 import java.time.LocalDateTime;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /* The class handles the event upon successful sign-in */
 @Component
 public class AuthenticationSuccessListener implements ApplicationListener<AuthenticationSuccessEvent> {
-
+    private static final Logger logger = LoggerFactory.getLogger(AuthenticationSuccessListener.class);
     private final UserSessionRepository userSessionRepository;
     private final UserRepository userRepository;
 
@@ -29,8 +31,10 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
 
     @Override
     public void onApplicationEvent(AuthenticationSuccessEvent event) {
+
         String email = ((UserDetails) event.getAuthentication().getPrincipal()).getUsername();
-        // check whether username exists
+        logger.info("User '{}' logged in successfully", email);
+        // check whether email exists
         User user = this.userRepository.findByEmail(email)
                 .orElseThrow(() -> new UserNotFoundException(
                         String.format("A user with the email '%s' does not exist",
@@ -49,6 +53,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         Session existing = userSessionRepository.findBySessionId(sessionId).orElse(null);
 
         if (existing == null) {
+            logger.info("Create new session for user {}", email);
             // create new
             Session session = Session.builder()
                     .sessionId(sessionId)
@@ -60,6 +65,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
                     .build();
             userSessionRepository.save(session);
         } else {
+            logger.info("Update user {} session", email);
             // update fields
             existing.setIpAddress(ip);
             existing.setDeviceInfo(userAgent);
