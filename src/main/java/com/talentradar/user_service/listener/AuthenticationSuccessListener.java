@@ -3,7 +3,7 @@ package com.talentradar.user_service.listener;
 import com.talentradar.user_service.exception.UserNotFoundException;
 import com.talentradar.user_service.model.Session;
 import com.talentradar.user_service.model.User;
-import com.talentradar.user_service.repository.SessionRepository;
+import com.talentradar.user_service.repository.UserSessionRepository;
 import com.talentradar.user_service.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.ApplicationListener;
@@ -19,11 +19,11 @@ import java.time.LocalDateTime;
 @Component
 public class AuthenticationSuccessListener implements ApplicationListener<AuthenticationSuccessEvent> {
 
-    private final SessionRepository sessionRepository;
+    private final UserSessionRepository userSessionRepository;
     private final UserRepository userRepository;
 
-    public AuthenticationSuccessListener(SessionRepository sessionRepository, UserRepository userRepository) {
-        this.sessionRepository = sessionRepository;
+    public AuthenticationSuccessListener(UserSessionRepository userSessionRepository, UserRepository userRepository) {
+        this.userSessionRepository = userSessionRepository;
         this.userRepository = userRepository;
     }
 
@@ -54,7 +54,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
                 .isActive(true)
                 .build();
 
-        sessionRepository.save(session);
+        userSessionRepository.save(session);
     }
 }
 
