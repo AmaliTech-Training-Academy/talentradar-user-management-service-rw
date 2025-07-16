@@ -1,5 +1,7 @@
 package com.talentradar.user_service.exception;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import com.talentradar.user_service.dto.LoginResponseDto;
+import org.springframework.web.context.request.WebRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
@@ -23,5 +26,18 @@ public class GlobalExceptionHandler {
                 .errors(List.of(errorDetails))
                 .build();
         return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+    }
+
+    // handle user is not found exception response
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFound(
+            UserNotFoundException exception, WebRequest webRequest) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("code", HttpStatus.NOT_FOUND.value());
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", exception.getMessage());
+        body.put("path", webRequest.getContextPath());
+        body.put("sessionId", webRequest.getSessionId());
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
 }
