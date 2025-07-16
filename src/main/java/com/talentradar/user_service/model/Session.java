@@ -23,7 +23,7 @@ public class Session {
     private String sessionId;
     private String ipAddress;
     private String deviceInfo;
-    private LocalDateTime loginTimestamp;
+    private LocalDateTime createdAt;
     private boolean isActive;
 
     @ManyToOne(fetch = FetchType.LAZY)

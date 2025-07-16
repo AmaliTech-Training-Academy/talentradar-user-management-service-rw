@@ -50,7 +50,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
                 .id(user.getId())
                 .ipAddress(ip)
                 .deviceInfo(userAgent)
-                .loginTimestamp(LocalDateTime.now())
+                .createdAt(LocalDateTime.now())
                 .isActive(true)
                 .build();
 
