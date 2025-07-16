@@ -4,7 +4,8 @@ import com.talentradar.user_service.model.Session;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
+import java.util.UUID;
 
-public interface UserSessionRepository extends JpaRepository<Session, Long> {
+public interface UserSessionRepository extends JpaRepository<Session, UUID> {
     Optional<Session> findBySessionId(String sessionId);
 }

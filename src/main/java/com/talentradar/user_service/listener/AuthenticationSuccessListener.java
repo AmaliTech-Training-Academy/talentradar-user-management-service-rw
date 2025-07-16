@@ -6,10 +6,12 @@ import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.repository.UserSessionRepository;
 import com.talentradar.user_service.repository.UserRepository;
 import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
@@ -18,16 +20,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /* The class handles the event upon successful sign-in */
-@Component
+@Service
+@RequiredArgsConstructor
 public class AuthenticationSuccessListener implements ApplicationListener<AuthenticationSuccessEvent> {
     private static final Logger logger = LoggerFactory.getLogger(AuthenticationSuccessListener.class);
     private final UserSessionRepository userSessionRepository;
     private final UserRepository userRepository;
-
-    public AuthenticationSuccessListener(UserSessionRepository userSessionRepository, UserRepository userRepository) {
-        this.userSessionRepository = userSessionRepository;
-        this.userRepository = userRepository;
-    }
 
     @Override
     public void onApplicationEvent(AuthenticationSuccessEvent event) {
