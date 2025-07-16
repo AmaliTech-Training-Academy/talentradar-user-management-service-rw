@@ -7,3 +7,6 @@ spring:
     config:
       uri: ${SPRING_CLOUD_CONFIG_URI}
 
+
+
+
