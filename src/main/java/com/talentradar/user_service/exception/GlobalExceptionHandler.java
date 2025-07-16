@@ -1,5 +1,6 @@
 package com.talentradar.user_service.exception;
 
+import java.nio.file.AccessDeniedException;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.List;
@@ -39,5 +40,16 @@ public class GlobalExceptionHandler {
         body.put("path", webRequest.getContextPath());
         body.put("sessionId", webRequest.getSessionId());
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<?> handleUnauthorizedException
+            (UnauthorizedException unauthorizedException, WebRequest webRequest) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("code", HttpStatus.UNAUTHORIZED.value());
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", unauthorizedException.getMessage());
+        body.put("path", webRequest.getContextPath());
+        body.put("sessionId", webRequest.getSessionId());
+        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
     }
 }
