@@ -9,31 +9,32 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.talentradar.user_service.dto.LoginResponseDto;
+import com.talentradar.user_service.dto.APIResponse;
 import com.talentradar.user_service.dto.UserNotFoundException;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
-    public ResponseEntity<LoginResponseDto> handleUserNotFoundException(UserNotFoundException ex) {
-        Map<String, String> errorDetails = Map.of("message", ex.getMessage());
-        LoginResponseDto errorResponse = LoginResponseDto.builder()
+
+    public ResponseEntity<APIResponse<?>> handleUserNotFoundException(UserNotFoundException ex) {
+        APIResponse<?> response = APIResponse.builder()
                 .status(false)
-                .message("Fetching user failed")
-                .errors(List.of(errorDetails))
+                .message("Fetching User Failed")
+                .data(null)
+                .errors(List.of(Map.of("message", ex.getMessage())))
                 .build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // Handle invalid credentials exception
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<LoginResponseDto> handleInvalidCredentials(BadCredentialsException ex) {
-        Map<String, String> errorDetails = Map.of("message", "Invalid credentials");
-        LoginResponseDto errorResponse = LoginResponseDto.builder()
+    public ResponseEntity<APIResponse<?>> handleInvalidCredentials(BadCredentialsException ex) {
+        APIResponse<?> response = APIResponse.builder()
                 .status(false)
                 .message("Login Failed")
-                .errors(List.of(errorDetails))
+                .errors(List.of(Map.of("message", ex.getMessage())))
+                .data(null)
                 .build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 }
