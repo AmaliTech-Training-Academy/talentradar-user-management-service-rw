@@ -6,6 +6,14 @@ spring:
   cloud:
     config:
       uri: ${SPRING_CLOUD_CONFIG_URI}
+  session:
+    store-type: redis
+    timeout: 30m
+
+  data:
+    redis:
+      host: localhost
+      port: 6379
 
 
 
