@@ -29,13 +29,13 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     private UUID id;
 
-    @Column(name = "username", nullable = false, unique = true)
+    @Column(name = "username", nullable = true, unique = true)
     private String username;
 
-    @Column(name = "full_name", nullable = false)
+    @Column(name = "full_name", nullable = true)
     private String fullName;
 
-    @Column(name = "email", nullable = false)
+    @Column(name = "email", nullable = false, unique = true)
     private String email;
 
     @ManyToOne

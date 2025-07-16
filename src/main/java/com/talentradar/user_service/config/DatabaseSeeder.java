@@ -2,16 +2,25 @@ package com.talentradar.user_service.config;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.crypto.password.PasswordEncoder;
+
 import com.talentradar.user_service.model.Role;
+import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.repository.RoleRepository;
+import com.talentradar.user_service.repository.UserRepository;
 
 @Configuration
 public class DatabaseSeeder implements CommandLineRunner {
 
     private final RoleRepository roleRepository;
+    private final UserRepository userRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public DatabaseSeeder(RoleRepository roleRepository) {
+    public DatabaseSeeder(RoleRepository roleRepository, UserRepository userRepository,
+            PasswordEncoder passwordEncoder) {
         this.roleRepository = roleRepository;
+        this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     @Override
@@ -41,8 +50,20 @@ public class DatabaseSeeder implements CommandLineRunner {
         if (!roleRepository.findByRoleName("MANAGER").isPresent()) {
             roleRepository.save(managerRole);
         }
-        // Additional seeding logic can be added here
+
         // 2) Seed Users with the roles created in step 1
+        // Create admin user
+        Role savedAdminRole = roleRepository.findByRoleName("ADMIN")
+                .orElseThrow(() -> new RuntimeException("ADMIN role not found after seeding"));
+        User adminUser = new User();
+        adminUser.setFullName("Admin User");
+        adminUser.setEmail("admin@example.com");
+        adminUser.setPassword(passwordEncoder.encode("test123"));
+        adminUser.setRole(savedAdminRole);
+
+        if (userRepository.findByEmail("admin@example.com").isEmpty()) {
+            userRepository.save(adminUser);
+        }
     }
 
 }
