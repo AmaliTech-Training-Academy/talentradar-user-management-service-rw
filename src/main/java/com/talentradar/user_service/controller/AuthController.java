@@ -2,27 +2,31 @@ package com.talentradar.user_service.controller;
 
 import java.util.Map;
 
+import jakarta.validation.Valid;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
-import com.talentradar.user_service.dto.LoginRequestDto;
-import com.talentradar.user_service.dto.LoginResponseDto;
+import com.talentradar.user_service.dto.*;
+import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.service.AuthenticationService;
+import com.talentradar.user_service.service.UserService;
+import com.talentradar.user_service.exception.InvalidTokenException;
+import com.talentradar.user_service.exception.ResourceAlreadyExistsException;
+import com.talentradar.user_service.exception.ResourceNotFoundException;
 
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @RestController
 @RequestMapping("/api/v1/auth")
+@RequiredArgsConstructor
 public class AuthController {
 
     private final AuthenticationService authService;
-
-    public AuthController(AuthenticationService authService) {
-        this.authService = authService;
-    }
+    private final UserService userService;
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponseDto> signin(@RequestBody LoginRequestDto loginRequest) {
@@ -33,6 +37,45 @@ public class AuthController {
                 + "; HttpOnly; Path=/; Max-Age=3600; secure=false; SameSite=Strict");
 
         return new ResponseEntity<>((LoginResponseDto) loginResponse.get("loginResponse"), headers, HttpStatus.OK);
-
+    }
+    
+    /**
+     * Initiates the user registration process.
+     * Admin creates a user with email and role, and an invite is sent to the user's email.
+     */
+    @PostMapping("/invite")
+    public ResponseEntity<UserResponse> initiateRegistration(@Valid @RequestBody InviteUserRequest inviteRequest) {
+        User newUser = userService.initiateRegistration(inviteRequest);
+        return new ResponseEntity<>(UserResponse.fromUser(newUser), HttpStatus.CREATED);
+    }
+    
+    /**
+     * Completes the user registration process.
+     * User provides full name and password to complete registration.
+     */
+    @PatchMapping("/complete-registration")
+    public ResponseEntity<UserResponse> completeRegistration(
+            @RequestParam("token") String token,
+            @Valid @RequestBody CompleteRegistrationRequest request) {
+        
+        if (!request.getPassword().equals(request.getConfirmPassword())) {
+            throw new InvalidTokenException("Password and confirmation do not match");
+        }
+        
+        User user = userService.completeRegistration(token, request);
+        return ResponseEntity.ok(UserResponse.fromUser(user));
+    }
+    
+    /**
+     * Validates a registration token.
+     * Can be used to check if a registration token is valid before showing the registration form.
+     */
+    @GetMapping("/validate-registration-token")
+    public ResponseEntity<Map<String, String>> validateRegistrationToken(@RequestParam("token") String token) {
+        User user = userService.validateRegistrationToken(token);
+        return ResponseEntity.ok(Map.of(
+            "email", user.getEmail(),
+            "status", "VALID"
+        ));
     }
 }
