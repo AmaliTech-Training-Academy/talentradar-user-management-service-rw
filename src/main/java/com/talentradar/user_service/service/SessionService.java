@@ -20,7 +20,7 @@ public class SessionService {
     private final SessionMapper sessionMapper;
 
     public Page<SessionResponseDto> getActiveSessions(Pageable pageable) {
-        Page<Session> sessionPage = this.userSessionRepository.findAll(pageable);
+        Page<Session> sessionPage = this.userSessionRepository.findAllByIsActiveTrue(pageable);
         logger.info("Admin fetched active sessions");
         return sessionPage.map(sessionMapper::toDto);
     }
