@@ -6,6 +6,18 @@ import java.util.List;
 import java.util.UUID;
 
 import jakarta.persistence.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
+import jakarta.persistence.PrePersist;
+import jakarta.persistence.PreUpdate;
+import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -35,8 +47,12 @@ public class User {
     @JoinColumn(name = "role", nullable = false)
     private Role role;
 
-    @Column(name = "password", nullable = false)
+    @Column(name = "password")
     private String password;
+
+    @Enumerated(EnumType.STRING)
+    @Column(name = "status", nullable = false)
+    private UserStatus status;
 
     @Column(name = "created_at")
     private LocalDateTime createdAt;
@@ -51,10 +67,16 @@ public class User {
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         updatedAt = LocalDateTime.now();
+        status = UserStatus.INACTIVE;
     }
 
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
+    }
+
+    public enum UserStatus {
+        INACTIVE,
+        ACTIVE
     }
 }
