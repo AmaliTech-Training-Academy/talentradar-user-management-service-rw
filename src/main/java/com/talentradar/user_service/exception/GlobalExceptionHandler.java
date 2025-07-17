@@ -84,6 +84,7 @@ public class GlobalExceptionHandler {
         body.put("path", webRequest.getContextPath());
         body.put("sessionId", webRequest.getSessionId());
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
 
     // Handle resource not found exception
     @ExceptionHandler(ResourceNotFoundException.class)
