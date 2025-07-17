@@ -15,10 +15,10 @@ public class SmtpEmailService implements EmailService {
 
     private final JavaMailSender mailSender;
 
-    @Value("${notification.email.from}")
+    @Value("${app.notification.email.from}")
     private String fromEmail;
 
-    @Value("${notification.email.subject.prefix}")
+    @Value("${app.notification.email.subject.prefix}")
     private String subjectPrefix;
 
     @Override
@@ -29,8 +29,9 @@ public class SmtpEmailService implements EmailService {
         message.setSubject(subjectPrefix + " Registration Invitation");
 
         String emailContent = """
-            You have been invited to join our platform!\n\n            Please click the following link to complete your registration:\n            %s\n\n            This link will expire in 10 minutes.
-            """.formatted(inviteLink);
+                You have been invited to join our platform!\n\n            Please click the following link to complete your registration:\n            %s\n\n            This link will expire in 10 minutes.
+                """
+                .formatted(inviteLink);
 
         message.setText(emailContent);
         mailSender.send(message);

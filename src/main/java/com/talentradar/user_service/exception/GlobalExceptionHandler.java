@@ -13,11 +13,24 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import com.talentradar.user_service.dto.APIResponse;
+import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.dto.ErrorResponse;
-import com.talentradar.user_service.dto.LoginResponseDto;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+    @ExceptionHandler(UserNotFoundException.class)
+
+    public ResponseEntity<APIResponse<?>> handleUserNotFoundException(UserNotFoundException ex) {
+        APIResponse<?> response = APIResponse.builder()
+                .status(false)
+                .message("Fetching User Failed")
+                .data(null)
+                .errors(List.of(Map.of("message", ex.getMessage())))
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
 
     // Handle validation errors
     @ExceptionHandler(MethodArgumentNotValidException.class)
@@ -26,7 +39,8 @@ public class GlobalExceptionHandler {
                 .getAllErrors()
                 .stream()
                 .map(error -> {
-                    String fieldName = error instanceof FieldError ? ((FieldError) error).getField() : error.getObjectName();
+                    String fieldName = error instanceof FieldError ? ((FieldError) error).getField()
+                            : error.getObjectName();
                     String errorMessage = error.getDefaultMessage();
                     return Map.of("field", fieldName, "message", errorMessage);
                 })
@@ -44,14 +58,14 @@ public class GlobalExceptionHandler {
 
     // Handle invalid credentials exception
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<LoginResponseDto> handleInvalidCredentials(BadCredentialsException ex) {
-        Map<String, String> errorDetails = Map.of("message", "Invalid credentials");
-        LoginResponseDto errorResponse = LoginResponseDto.builder()
+    public ResponseEntity<APIResponse<?>> handleInvalidCredentials(BadCredentialsException ex) {
+        APIResponse<?> response = APIResponse.builder()
                 .status(false)
                 .message("Login Failed")
-                .errors(List.of(errorDetails))
+                .errors(List.of(Map.of("message", ex.getMessage())))
+                .data(null)
                 .build();
-        return new ResponseEntity<>(errorResponse, HttpStatus.UNAUTHORIZED);
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 
     // Handle resource not found exception
@@ -60,7 +74,7 @@ public class GlobalExceptionHandler {
         ErrorResponse errorResponse = new ErrorResponse(ex.getMessage(), null);
         return new ResponseEntity<>(errorResponse, HttpStatus.NOT_FOUND);
     }
-    
+
     // Handle resource already exists exception
     @ExceptionHandler(ResourceAlreadyExistsException.class)
     public ResponseEntity<ErrorResponse> handleResourceAlreadyExists(ResourceAlreadyExistsException ex) {
