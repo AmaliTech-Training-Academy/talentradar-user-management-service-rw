@@ -5,7 +5,6 @@ import com.talentradar.user_service.exception.SessionNotFoundException;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
 import com.talentradar.user_service.repository.UserSessionRepository;
-import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
@@ -30,9 +29,11 @@ public class SessionService {
 
     @Transactional
     public void revokeSessionById(String sessionId, HttpSession sessionRequest) {
-        Session session = this.userSessionRepository.findBySessionId(sessionId)
-                .orElseThrow(() -> new SessionNotFoundException(
-                        String.format("The session with id email '%s' does not exist", sessionId)));
+        if(this.userSessionRepository.findBySessionId(sessionId).isEmpty()){
+            throw new SessionNotFoundException(
+                    String.format("The session with id email '%s' does not exist", sessionId));
+
+        }
 
         sessionRequest.invalidate(); // this deletes session from Redis
         this.userSessionRepository.deleteBySessionId(sessionId); // this session data in DB
