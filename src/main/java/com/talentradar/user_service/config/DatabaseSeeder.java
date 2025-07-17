@@ -60,6 +60,7 @@ public class DatabaseSeeder implements CommandLineRunner {
         adminUser.setEmail("admin@example.com");
         adminUser.setPassword(passwordEncoder.encode("test123"));
         adminUser.setRole(savedAdminRole);
+        adminUser.setStatus(User.UserStatus.ACTIVE);
 
         if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             userRepository.save(adminUser);

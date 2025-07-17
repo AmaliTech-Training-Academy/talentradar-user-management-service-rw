@@ -16,5 +16,5 @@ spring:
       port: ${REDIS_PORT}
 
 
-
-
+  profiles:
+    active: prod
