@@ -32,10 +32,10 @@ public class SessionController {
             description = "This end point allow only admin to view all of the active session")
     public ResponseEntity<Page<SessionResponseDto>> viewProjects(HttpServletRequest request, Pageable pageable){
         String userRole = request.getHeader("X-User-Role");
-        if (userRole == null || !userRole.equalsIgnoreCase("ADMIN")) {
-            logger.info("Unauthorized user tried to access session data");
-            throw new UnauthorizedException("Only admin has access to this data!");
-        }
+//        if (userRole == null || !userRole.equalsIgnoreCase("ADMIN")) {
+//            logger.info("Unauthorized user tried to access session data");
+//            throw new UnauthorizedException("Only admin has access to this data!");
+//        }
         Page<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
         return ResponseEntity.ok(sessionsList);
     }

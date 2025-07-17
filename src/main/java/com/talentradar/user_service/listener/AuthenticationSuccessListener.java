@@ -1,6 +1,6 @@
 package com.talentradar.user_service.listener;
 
-import com.talentradar.user_service.exception.UserNotFoundException;
+import com.talentradar.user_service.exception.NotFoundUserException;
 import com.talentradar.user_service.model.Session;
 import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.repository.UserSessionRepository;
@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -34,7 +33,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         logger.info("User '{}' logged in successfully", email);
         // check whether email exists
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new UserNotFoundException(
+                .orElseThrow(() -> new NotFoundUserException(
                         String.format("A user with the email '%s' does not exist",
                                 email))
                 );

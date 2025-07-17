@@ -111,7 +111,7 @@ public class GlobalExceptionHandler {
     }
 
     // handle user is not found exception response
-    @ExceptionHandler(UserNotFoundException.class)
+    @ExceptionHandler(NotFoundUserException.class)
     public ResponseEntity<?> handleUserNotFound(
             UserNotFoundException exception, WebRequest webRequest) {
         Map<String, Object> body = new HashMap<>();
@@ -125,7 +125,7 @@ public class GlobalExceptionHandler {
 
     // handle user is not found exception response
     @ExceptionHandler(SessionNotFoundException.class)
-    public ResponseEntity<?> handleUserNotFound(
+    public ResponseEntity<?> handleSessionNotFound(
             SessionNotFoundException exception, WebRequest webRequest) {
         Map<String, Object> body = new HashMap<>();
         body.put("code", HttpStatus.NOT_FOUND.value());
