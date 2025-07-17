@@ -7,7 +7,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Service;
 
-import com.talentradar.user_service.dto.ApiResponse;
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.LoginRequestDto;
 import com.talentradar.user_service.dto.UserDto;
 import com.talentradar.user_service.model.CustomUserDetails;
@@ -46,7 +46,7 @@ public class AuthenticationService {
 
                 Map<String, UserDto> userMap = Map.of("user", userDto);
 
-                ApiResponse loginResponseDto = ApiResponse.builder()
+                ResponseDto loginResponseDto = ResponseDto.builder()
                                 .status(true)
                                 .message("Login successful")
                                 .data(userMap)

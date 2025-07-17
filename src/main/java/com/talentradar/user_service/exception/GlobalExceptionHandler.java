@@ -13,7 +13,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
-import com.talentradar.user_service.dto.ApiResponse;
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.ErrorResponse;
 import com.talentradar.user_service.dto.UserNotFoundException;
 
@@ -21,8 +21,8 @@ import com.talentradar.user_service.dto.UserNotFoundException;
 public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
 
-    public ResponseEntity<ApiResponse> handleUserNotFoundException(UserNotFoundException ex) {
-        ApiResponse response = ApiResponse.builder()
+    public ResponseEntity<ResponseDto> handleUserNotFoundException(UserNotFoundException ex) {
+        ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("Fetching User Failed")
                 .data(null)
@@ -58,8 +58,8 @@ public class GlobalExceptionHandler {
 
     // Handle invalid credentials exception
     @ExceptionHandler(BadCredentialsException.class)
-    public ResponseEntity<ApiResponse> handleInvalidCredentials(BadCredentialsException ex) {
-        ApiResponse response = ApiResponse.builder()
+    public ResponseEntity<ResponseDto> handleInvalidCredentials(BadCredentialsException ex) {
+        ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("Login Failed")
                 .errors(List.of(Map.of("message", ex.getMessage())))

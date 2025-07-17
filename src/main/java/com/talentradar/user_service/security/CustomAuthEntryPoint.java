@@ -7,7 +7,7 @@ import org.springframework.security.web.AuthenticationEntryPoint;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.talentradar.user_service.dto.ApiResponse;
+import com.talentradar.user_service.dto.ResponseDto;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,7 +21,7 @@ public class CustomAuthEntryPoint implements AuthenticationEntryPoint {
     public void commence(HttpServletRequest request, HttpServletResponse response,
             org.springframework.security.core.AuthenticationException authException)
             throws java.io.IOException, ServletException {
-        ApiResponse apiResponse = ApiResponse.builder()
+        ResponseDto apiResponse = ResponseDto.builder()
                 .status(false)
                 .message("Unauthorized")
                 .data(null)

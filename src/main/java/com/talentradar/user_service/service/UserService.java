@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.talentradar.user_service.dto.ApiResponse;
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
 import com.talentradar.user_service.dto.InviteUserRequest;
 import com.talentradar.user_service.dto.PageInfo;
@@ -56,7 +56,7 @@ public class UserService {
     @Value("${app.base-url}")
     private String baseUrl;
 
-    public ApiResponse getMe(UUID userId) {
+    public ResponseDto getMe(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         UserDto userDto = UserDto.builder()
@@ -71,7 +71,7 @@ public class UserService {
         userMap.put("user", userDto);
 
         // Create and return
-        ApiResponse loginResponseDto = ApiResponse.builder()
+        ResponseDto loginResponseDto = ResponseDto.builder()
                 .status(true)
                 .message("User retrieved successfully")
                 .data(userMap)
@@ -81,7 +81,7 @@ public class UserService {
     }
 
     // Get All Users
-    public ApiResponse getAllUsers(int page, int size) {
+    public ResponseDto getAllUsers(int page, int size) {
 
         int pageNumber = page <= 0 ? page : page - 1;
 
@@ -103,7 +103,7 @@ public class UserService {
         pageResponseMap.put("users", userDtoPage.getContent());
         pageResponseMap.put("pageInfo", pageInfo);
 
-        ApiResponse apiResponseRefined = ApiResponse.builder()
+        ResponseDto apiResponseRefined = ResponseDto.builder()
                 .status(true)
                 .message("Users retrieved successfully")
                 .data(pageResponseMap)

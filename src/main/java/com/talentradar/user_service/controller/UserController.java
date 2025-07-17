@@ -10,7 +10,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.talentradar.user_service.dto.ApiResponse;
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.service.UserService;
 
 @RestController
@@ -24,12 +24,12 @@ public class UserController {
 
     // Define user-related endpoints here
     @GetMapping("/me")
-    public ResponseEntity<ApiResponse> getMe(@RequestHeader("X-User-Id") String userIdFromHeader) {
+    public ResponseEntity<ResponseDto> getMe(@RequestHeader("X-User-Id") String userIdFromHeader) {
         // Get user id from header X-User-Id
         UUID userId = UUID.fromString(userIdFromHeader);
 
         // Load User from database
-        ApiResponse loginResponseDto = userService.getMe(userId);
+        ResponseDto loginResponseDto = userService.getMe(userId);
 
         return ResponseEntity.ok(loginResponseDto);
     }
@@ -38,7 +38,7 @@ public class UserController {
     public ResponseEntity<?> getAll(@RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        ApiResponse response = userService.getAllUsers(page, size);
+        ResponseDto response = userService.getAllUsers(page, size);
         return new ResponseEntity<>(response, HttpStatus.OK);
     }
 
