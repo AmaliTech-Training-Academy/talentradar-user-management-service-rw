@@ -6,23 +6,17 @@ import java.util.Map;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-@Setter
 @Getter
+@Setter
+@NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class APIResponse<T> {
+public class ResponseDto {
     private Boolean status;
     private String message;
-    private Data<T> data;
+    private Object data;
     private List<Map<String, String>> errors;
-
-    @Setter
-    @Getter
-    @AllArgsConstructor
-    @Builder
-    public static class Data<T> {
-        private T data;
-    }
 }

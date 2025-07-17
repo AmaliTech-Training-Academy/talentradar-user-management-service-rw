@@ -3,17 +3,22 @@ package com.talentradar.user_service.service;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.talentradar.user_service.dto.APIResponse;
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
 import com.talentradar.user_service.dto.InviteUserRequest;
+import com.talentradar.user_service.dto.PageInfo;
 import com.talentradar.user_service.dto.UserDto;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.exception.InvalidTokenException;
@@ -51,7 +56,7 @@ public class UserService {
     @Value("${app.base-url}")
     private String baseUrl;
 
-    public APIResponse<UserDto> getMe(UUID userId) {
+    public ResponseDto getMe(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new UserNotFoundException("User not found"));
         UserDto userDto = UserDto.builder()
@@ -62,14 +67,50 @@ public class UserService {
                 .role(user.getRole().getRoleName())
                 .build();
 
+        Map<String, UserDto> userMap = new HashMap<>();
+        userMap.put("user", userDto);
+
         // Create and return
-        APIResponse<UserDto> loginResponseDto = APIResponse.<UserDto>builder()
+        ResponseDto loginResponseDto = ResponseDto.builder()
                 .status(true)
                 .message("User retrieved successfully")
-                .data(new APIResponse.Data<>(userDto))
+                .data(userMap)
                 .errors(null)
                 .build();
         return loginResponseDto;
+    }
+
+    // Get All Users
+    public ResponseDto getAllUsers(int page, int size) {
+
+        int pageNumber = page <= 0 ? page : page - 1;
+
+        Page<User> usersPage = userRepository.findAll(PageRequest.of(pageNumber, size));
+        Page<UserDto> userDtoPage = UserDto.fromPage(usersPage);
+
+        // Create PageInfo
+        PageInfo pageInfo = new PageInfo(
+                usersPage.getNumber(),
+                usersPage.getSize(),
+                usersPage.getTotalElements(),
+                usersPage.getTotalPages(),
+                usersPage.hasNext(),
+                usersPage.hasPrevious(),
+                usersPage.isFirst(),
+                usersPage.isLast());
+
+        Map<String, Object> pageResponseMap = new HashMap<>();
+        pageResponseMap.put("users", userDtoPage.getContent());
+        pageResponseMap.put("pageInfo", pageInfo);
+
+        ResponseDto apiResponseRefined = ResponseDto.builder()
+                .status(true)
+                .message("Users retrieved successfully")
+                .data(pageResponseMap)
+                .errors(null)
+                .build();
+
+        return apiResponseRefined;
     }
 
     @Transactional
