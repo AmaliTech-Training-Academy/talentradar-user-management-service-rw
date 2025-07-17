@@ -1,31 +1,19 @@
-# Spring Boot Development Dockerfile
-FROM openjdk:21-jdk-slim
+# Perform the extraction in a separate builder container
+FROM bellsoft/liberica-openjre-debian:24-cds AS builder
 
-# Set working directory
-WORKDIR /app
+WORKDIR /builder
 
-# Install Maven (for dependency management and hot reload)
-RUN apt-get update && \
-    apt-get install -y maven && \
-    rm -rf /var/lib/apt/lists/*
+ARG JAR_FILE=target/*.jar
+COPY ${JAR_FILE} application.jar
+RUN java -Djarmode=tools -jar application.jar extract --layers --destination extracted
 
-# Copy Maven files first for better layer caching
-COPY pom.xml .
-COPY mvnw .
-COPY .mvn .mvn
+FROM bellsoft/liberica-openjre-debian:24-cds
 
-# Download dependencies (this layer will be cached unless pom.xml changes)
-RUN mvn dependency:go-offline -B
+WORKDIR /application
 
-# Run tests
-RUN mvn test
+COPY --from=builder /builder/extracted/dependencies/ ./
+COPY --from=builder /builder/extracted/spring-boot-loader/ ./
+COPY --from=builder /builder/extracted/snapshot-dependencies/ ./
+COPY --from=builder /builder/extracted/application/ ./
 
-
-# Copy source code
-COPY src ./src
-
-# Expose application port and debug port
-EXPOSE 8081
-
-# Run the application with hot reload enabled
-CMD ["mvn", "spring-boot:run"]
+ENTRYPOINT ["java", "-jar", "application.jar"]
