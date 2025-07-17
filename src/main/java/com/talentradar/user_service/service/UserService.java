@@ -82,7 +82,10 @@ public class UserService {
 
     // Get All Users
     public ApiResponse getAllUsers(int page, int size) {
-        Page<User> usersPage = userRepository.findAll(PageRequest.of(page, size));
+
+        int pageNumber = page <= 0 ? page : page - 1;
+
+        Page<User> usersPage = userRepository.findAll(PageRequest.of(pageNumber, size));
         Page<UserDto> userDtoPage = UserDto.fromPage(usersPage);
 
         // Create PageInfo
