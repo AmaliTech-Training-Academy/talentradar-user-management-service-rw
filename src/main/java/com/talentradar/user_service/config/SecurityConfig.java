@@ -40,7 +40,7 @@ public class SecurityConfig {
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
-                                "/swagger-ui/**").permitAll()
+                                "/swagger-ui/**","/api/v1/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**")
                         .permitAll()
                         .requestMatchers("/api/v1/auth/login", "/api/v1/auth/complete-registration").permitAll()

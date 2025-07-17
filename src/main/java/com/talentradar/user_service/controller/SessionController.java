@@ -1,5 +1,6 @@
 package com.talentradar.user_service.controller;
 
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.exception.UnauthorizedException;
 import com.talentradar.user_service.listener.AuthenticationSuccessListener;
@@ -17,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -31,9 +33,15 @@ public class SessionController {
     @Operation(summary = "Fetch all active session",
             description = "This end point allow only admin to view all of the active session")
 //    @PreAuthorize("hasRole('Admin')")
-    public ResponseEntity<Page<SessionResponseDto>> viewProjects(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<ResponseDto> viewProjects(HttpServletRequest request, Pageable pageable){
         Page<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
-        return ResponseEntity.ok(sessionsList);
+        ResponseDto response = ResponseDto.builder()
+                .status(true)
+                .message("Fetch session list")
+                .errors(List.of())
+                .data(sessionsList)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
 //    @PreAuthorize("hasRole('ADMIN')")
@@ -42,7 +50,13 @@ public class SessionController {
             description = "This end point allow only admin to delete/revoke a session using its id")
     public ResponseEntity<?> deleteRestaurant(@PathVariable String sessionId){
         this.sessionService.revokeSessionById(sessionId);
-        return ResponseEntity.status(HttpStatus.OK)
-                .body(Map.of("message", "Session revoked successfully!"));
+
+        ResponseDto response = ResponseDto.builder()
+                .status(true)
+                .message("DeleteSession")
+                .errors(List.of())
+                .data(null)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 }

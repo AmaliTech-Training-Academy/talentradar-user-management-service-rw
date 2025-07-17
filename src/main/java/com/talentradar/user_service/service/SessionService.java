@@ -2,7 +2,6 @@ package com.talentradar.user_service.service;
 
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.exception.SessionNotFoundException;
-import com.talentradar.user_service.listener.AuthenticationSuccessListener;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
 import com.talentradar.user_service.repository.UserSessionRepository;
