@@ -23,7 +23,7 @@ public class JwtUtils {
     private String jwtExpirationMS;
 
     // Generate Jwt token
-    public String generateJwtTokenFromEmail(CustomUserDetails userDetails) {
+    public String generateJwtTokenFromUserId(CustomUserDetails userDetails) {
         String userRole = userDetails.getAuthorities()
                 .stream()
                 .findFirst()
@@ -34,10 +34,8 @@ public class JwtUtils {
                 .claim("email", userDetails.getEmail())
                 .claim("fullName", userDetails.getUser().getFullName())
                 .claim("role", userRole)
-                .claim("userId", userDetails.getUserId())
                 .expiration(new Date((new Date()).getTime() + Long.parseLong(jwtExpirationMS)))
                 .signWith(key()).compact();
-
     }
 
     // Key encription

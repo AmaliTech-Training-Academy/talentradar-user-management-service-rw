@@ -9,12 +9,9 @@ spring:
   session:
     store-type: redis
     timeout: 30m
-
   data:
     redis:
       host: ${REDIS_HOSTNAME}
       port: ${REDIS_PORT}
-
-
-
-
+  profiles:
+    active: prod
