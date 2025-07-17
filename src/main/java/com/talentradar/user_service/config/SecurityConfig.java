@@ -44,7 +44,6 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.POST, "/api/v1/auth/**")
                         .permitAll()
                         .requestMatchers("/api/v1/auth/login", "/api/v1/auth/complete-registration").permitAll()
-
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())
                 .addFilterBefore(headerAuthenticationFilter,
