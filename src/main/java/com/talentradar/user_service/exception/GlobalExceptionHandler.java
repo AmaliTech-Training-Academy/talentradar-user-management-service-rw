@@ -43,6 +43,19 @@ public class GlobalExceptionHandler {
         body.put("sessionId", webRequest.getSessionId());
         return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
     }
+
+    // handle user is not found exception response
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<?> handleUserNotFound(
+            SessionNotFoundException exception, WebRequest webRequest) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("code", HttpStatus.NOT_FOUND.value());
+        body.put("timestamp", LocalDateTime.now());
+        body.put("message", exception.getMessage());
+        body.put("path", webRequest.getContextPath());
+        body.put("sessionId", webRequest.getSessionId());
+        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+    }
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<?> handleUnauthorizedException
             (UnauthorizedException unauthorizedException, WebRequest webRequest) {

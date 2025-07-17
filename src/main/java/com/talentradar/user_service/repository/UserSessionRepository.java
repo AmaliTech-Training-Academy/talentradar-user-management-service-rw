@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface UserSessionRepository extends JpaRepository<Session, UUID> {
     Optional<Session> findBySessionId(String sessionId);
     Page<Session> findAllByIsActiveTrue(Pageable pageable);
+    void deleteBySessionId(String sessionId);
 }
