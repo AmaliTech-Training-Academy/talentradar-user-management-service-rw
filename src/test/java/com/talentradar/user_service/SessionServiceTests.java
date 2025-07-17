@@ -1,4 +1,5 @@
 package com.talentradar.user_service;
+
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
@@ -28,7 +29,7 @@ public class SessionServiceTests {
 
     @BeforeEach
     void setUp() {
-        MockitoAnnotations.openMocks(this); // initialize mocks
+        MockitoAnnotations.openMocks(this);
     }
 
     @Test
@@ -47,16 +48,38 @@ public class SessionServiceTests {
         responseDto.setSessionId("abc123");
 
         Page<Session> sessionPage = new PageImpl<>(List.of(session));
-        when(sessionRepository.findAll(any(Pageable.class))).thenReturn(sessionPage);
+
+        // 🔁 UPDATED: match the actual repository method used in your service
+        when(sessionRepository.findAllByIsActiveTrue (any(Pageable.class))).thenReturn(sessionPage);
         when(sessionMapper.toDto(session)).thenReturn(responseDto);
+
         // When
         Page<SessionResponseDto> result = sessionService.getActiveSessions(PageRequest.of(0, 10));
 
         // Then
-        assertThat(result).hasSize(1);
+        assertThat(result).isNotNull();
+        assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getSessionId()).isEqualTo("abc123");
 
-        verify(sessionRepository).findAll(any(Pageable.class));
+        // 🔁 UPDATED: match the method you mocked above
+        verify(sessionRepository).findAllByIsActiveTrue(any(Pageable.class));
         verify(sessionMapper).toDto(session);
+    }
+
+
+    @Test
+    void testRevokeSessionById_whenSessionNotFound_shouldThrowException() {
+        // Given
+        String sessionId = "nonexistent";
+        when(sessionRepository.findBySessionId(sessionId)).thenReturn(java.util.Optional.empty());
+
+        // Then
+        org.junit.jupiter.api.Assertions.assertThrows(
+                com.talentradar.user_service.exception.SessionNotFoundException.class,
+                () -> sessionService.revokeSessionById(sessionId)
+        );
+
+        verify(sessionRepository).findBySessionId(sessionId);
+        verify(sessionRepository, never()).deleteBySessionId(anyString());
     }
 }

@@ -30,17 +30,13 @@ public class SessionController {
     @GetMapping(name = "fetchActiveSessions", path = "/sessions")
     @Operation(summary = "Fetch all active session",
             description = "This end point allow only admin to view all of the active session")
+    @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<Page<SessionResponseDto>> viewProjects(HttpServletRequest request, Pageable pageable){
-        String userRole = request.getHeader("X-User-Role");
-//        if (userRole == null || !userRole.equalsIgnoreCase("ADMIN")) {
-//            logger.info("Unauthorized user tried to access session data");
-//            throw new UnauthorizedException("Only admin has access to this data!");
-//        }
         Page<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
         return ResponseEntity.ok(sessionsList);
     }
 
-    //@PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ADMIN')")
     @DeleteMapping(name = "revokeASingleSession", path = "/sessions/{sessionId}")
     @Operation(summary = "Delete a single session",
             description = "This end point allow only admin to delete/revoke a session using its id")
