@@ -8,6 +8,7 @@ import com.talentradar.user_service.service.SessionService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,8 +49,9 @@ public class SessionController {
     @DeleteMapping(name = "revokeASingleSession", path = "/sessions/{sessionId}")
     @Operation(summary = "Delete a single session",
             description = "This end point allow only admin to delete/revoke a session using its id")
-    public ResponseEntity<?> deleteRestaurant(@PathVariable String sessionId){
-        this.sessionService.revokeSessionById(sessionId);
+    public ResponseEntity<?> deleteRestaurant(@PathVariable String sessionId, HttpServletRequest request){
+        HttpSession session = request.getSession(false); // get current session
+        this.sessionService.revokeSessionById(sessionId, session);
 
         ResponseDto response = ResponseDto.builder()
                 .status(true)
