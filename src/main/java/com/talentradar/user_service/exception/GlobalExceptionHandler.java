@@ -114,36 +114,36 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(NotFoundUserException.class)
     public ResponseEntity<?> handleUserNotFound(
             UserNotFoundException exception, WebRequest webRequest) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", HttpStatus.NOT_FOUND.value());
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", exception.getMessage());
-        body.put("path", webRequest.getContextPath());
-        body.put("sessionId", webRequest.getSessionId());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("UserNotFound")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
     // handle user is not found exception response
     @ExceptionHandler(SessionNotFoundException.class)
     public ResponseEntity<?> handleSessionNotFound(
             SessionNotFoundException exception, WebRequest webRequest) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", HttpStatus.NOT_FOUND.value());
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", exception.getMessage());
-        body.put("path", webRequest.getContextPath());
-        body.put("sessionId", webRequest.getSessionId());
-        return new ResponseEntity<>(body, HttpStatus.NOT_FOUND);
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("SessionNotFound")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<?> handleUnauthorizedException
             (UnauthorizedException unauthorizedException, WebRequest webRequest) {
-        Map<String, Object> body = new HashMap<>();
-        body.put("code", HttpStatus.UNAUTHORIZED.value());
-        body.put("timestamp", LocalDateTime.now());
-        body.put("message", unauthorizedException.getMessage());
-        body.put("path", webRequest.getContextPath());
-        body.put("sessionId", webRequest.getSessionId());
-        return new ResponseEntity<>(body, HttpStatus.UNAUTHORIZED);
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("Unauthorized Exception")
+                .errors(List.of(Map.of("message", unauthorizedException.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 }

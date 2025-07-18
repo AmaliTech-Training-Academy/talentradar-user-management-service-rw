@@ -62,8 +62,21 @@ public class DatabaseSeeder implements CommandLineRunner {
         adminUser.setRole(savedAdminRole);
         adminUser.setStatus(User.UserStatus.ACTIVE);
 
+        // Create manager user
+        Role savedManagerRole = roleRepository.findByRoleName("MANAGER")
+                .orElseThrow(() -> new RuntimeException("MANAGER role not found after seeding"));
+        User managerUser = new User();
+        managerUser.setFullName("Manager User");
+        managerUser.setEmail("manager@example.com");
+        managerUser.setPassword(passwordEncoder.encode("test123"));
+        managerUser.setRole(savedManagerRole);
+        managerUser.setStatus(User.UserStatus.ACTIVE);
+
         if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             userRepository.save(adminUser);
+        }
+        if (userRepository.findByEmail("manager@example.com").isEmpty()) {
+            userRepository.save(managerUser);
         }
     }
 
