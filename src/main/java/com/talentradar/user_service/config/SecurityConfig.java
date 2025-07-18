@@ -1,6 +1,7 @@
 package com.talentradar.user_service.config;
 
 import com.talentradar.user_service.service.CustomUserDetailsService;
+import jakarta.ws.rs.HttpMethod;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -40,6 +41,10 @@ public class SecurityConfig {
                 .cors(AbstractHttpConfigurer::disable)
                 .logout(AbstractHttpConfigurer::disable)
                 .authorizeHttpRequests(auth -> auth
+                        .requestMatchers("/v3/api-docs/**", "/swagger-ui.html",
+                                "/swagger-ui/**").permitAll()
+                        .requestMatchers(HttpMethod.POST, "/api/v1/auth/**")
+                        .permitAll()
                         .requestMatchers("/api/v1/auth/login", "/api/v1/auth/complete-registration").permitAll()
                         .anyRequest().authenticated())
                 .authenticationProvider(authenticationProvider())

@@ -1,9 +1,13 @@
 package com.talentradar.user_service.exception;
 
+import java.nio.file.AccessDeniedException;
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
+import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -13,11 +17,14 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
+import org.springframework.web.context.request.WebRequest;
+import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.ErrorResponse;
 import com.talentradar.user_service.dto.UserNotFoundException;
 
 @RestControllerAdvice
+@Hidden
 public class GlobalExceptionHandler {
     @ExceptionHandler(UserNotFoundException.class)
 
@@ -101,5 +108,42 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
         ErrorResponse errorResponse = new ErrorResponse("An unexpected error occurred", null);
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // handle user is not found exception response
+    @ExceptionHandler(NotFoundUserException.class)
+    public ResponseEntity<?> handleUserNotFound(
+            UserNotFoundException exception, WebRequest webRequest) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("UserNotFound")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    // handle user is not found exception response
+    @ExceptionHandler(SessionNotFoundException.class)
+    public ResponseEntity<?> handleSessionNotFound(
+            SessionNotFoundException exception, WebRequest webRequest) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("SessionNotFound")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+    @ExceptionHandler(UnauthorizedException.class)
+    public ResponseEntity<?> handleUnauthorizedException
+            (UnauthorizedException unauthorizedException, WebRequest webRequest) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("Unauthorized Exception")
+                .errors(List.of(Map.of("message", unauthorizedException.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
 }
