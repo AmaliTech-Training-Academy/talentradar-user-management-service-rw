@@ -53,10 +53,11 @@ public class SessionService {
     }
     public Page<SessionResponseDto> filterSessions(
             UUID userId,
-            String stringDate,
+            String dateString,
             Pageable pageable
     ) {
         Page<Session> sessionList;
+        LocalDate date = null;
 
         //validate userId
         if (userId != null) {
@@ -64,9 +65,43 @@ public class SessionService {
                 throw new UserNotFoundException(
                         String.format("The user with id '%s' does not exist", userId));
 
-            }
+            };
         }
-        sessionList = userSessionRepository.findAllByUserId(userId,pageable);
-        return sessionList.map(sessionMapper::toDto);
+
+        // Validate user if provided
+        if (userId != null && userRepository.findById(userId).isEmpty()) {
+            throw new UserNotFoundException(
+                    String.format("The user with id '%s' does not exist", userId));
+        }
+
+        // Both userId and date provided
+        if (userId != null && date != null) {
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.atTime(LocalTime.MAX);
+            return userSessionRepository
+                    .findByUserIdAndCreatedAtBetween(userId, start, end, pageable)
+                    .map(sessionMapper::toDto);
+        }
+
+        // Only userId
+        if (userId != null) {
+            return userSessionRepository
+                    .findAllByUserId(userId, pageable)
+                    .map(sessionMapper::toDto);
+        }
+
+        // Only date
+        if (date != null) {
+            LocalDateTime start = date.atStartOfDay();
+            LocalDateTime end = date.atTime(LocalTime.MAX);
+            return userSessionRepository
+                    .findByCreatedAtBetween(start, end, pageable)
+                    .map(sessionMapper::toDto);
+        }
+
+        // No filter, return all
+        return userSessionRepository
+                .findAll(pageable)
+                .map(sessionMapper::toDto);
     }
 }

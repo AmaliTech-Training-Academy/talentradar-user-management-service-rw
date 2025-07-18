@@ -17,4 +17,5 @@ public interface UserSessionRepository extends JpaRepository<Session, UUID> {
     Page<Session> findAllByUserId(UUID userId, Pageable pageable);
     Page<Session> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
     Page<Session> findByUserIdAndCreatedAtBetween(UUID userId, LocalDateTime start, LocalDateTime end, Pageable pageable);
+    Page<Session> findAll(Pageable pageable);
 }
