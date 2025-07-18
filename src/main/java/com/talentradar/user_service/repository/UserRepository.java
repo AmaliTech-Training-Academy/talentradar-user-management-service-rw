@@ -1,5 +1,6 @@
 package com.talentradar.user_service.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -18,4 +19,6 @@ public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByUsername(String username);
 
     Page<User> findByRole(Role role, PageRequest pageRequest);
+
+    List<User> findByRole(Role role);
 }
