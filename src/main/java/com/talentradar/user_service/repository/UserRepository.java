@@ -12,4 +12,5 @@ import com.talentradar.user_service.model.User;
 public interface UserRepository extends JpaRepository<User, UUID> {
     Optional<User> findByEmail(String email);
     Optional<User> findByUsername(String username);
+    Optional<User>findById(UUID userId);
 }
