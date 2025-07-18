@@ -1,1 +1,1 @@
-# talentradar-user-management-service-rw
+# talentradar-user-management-service-rwanda

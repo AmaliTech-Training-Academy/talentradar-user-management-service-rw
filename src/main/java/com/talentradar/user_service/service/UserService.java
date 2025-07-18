@@ -81,16 +81,24 @@ public class UserService {
     }
 
     // Get All Users
-    public ResponseDto getAllUsers(int page, int size) {
+    public ResponseDto getAllUsers(int page, int size, UUID roleId) {
 
         int pageNumber = page <= 0 ? page : page - 1;
 
-        Page<User> usersPage = userRepository.findAll(PageRequest.of(pageNumber, size));
+        Page<User> usersPage;
+        if (roleId != null) {
+            Role role = roleRepository.findById(roleId)
+                    .orElseThrow(() -> new ResourceNotFoundException("Role not found with id: " + roleId));
+            usersPage = userRepository.findByRole(role, PageRequest.of(pageNumber, size));
+        } else {
+            usersPage = userRepository.findAll(PageRequest.of(pageNumber, size));
+        }
+
         Page<UserDto> userDtoPage = UserDto.fromPage(usersPage);
 
         // Create PageInfo
         PageInfo pageInfo = new PageInfo(
-                usersPage.getNumber(),
+                usersPage.getNumber() + 1, // Convert to 1-based index
                 usersPage.getSize(),
                 usersPage.getTotalElements(),
                 usersPage.getTotalPages(),
