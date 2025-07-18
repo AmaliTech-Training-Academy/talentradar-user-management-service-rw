@@ -1,85 +1,68 @@
 package com.talentradar.user_service;
 
 import com.talentradar.user_service.dto.SessionResponseDto;
+import com.talentradar.user_service.exception.SessionNotFoundException;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
+import com.talentradar.user_service.repository.UserRepository;
 import com.talentradar.user_service.repository.UserSessionRepository;
 import com.talentradar.user_service.service.SessionService;
+import jakarta.servlet.http.HttpSession;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
+import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
-public class SessionServiceTests {
-    @Mock
-    private UserSessionRepository sessionRepository;
+@ExtendWith(MockitoExtension.class)
+class SessionServiceTest {
 
     @Mock
-    private SessionMapper sessionMapper;
+    private UserSessionRepository userSessionRepository;
 
     @InjectMocks
     private SessionService sessionService;
 
-    @BeforeEach
-    void setUp() {
-        MockitoAnnotations.openMocks(this);
-    }
-
     @Test
-    void testGetActiveSessions_returnsMappedDtos() {
+    void testRevokeSessionById_whenSessionExists_shouldInvalidateAndDelete() {
         // Given
-        Session session = Session.builder()
-                .id(UUID.randomUUID())
-                .sessionId("abc123")
-                .ipAddress("192.168.0.1")
-                .deviceInfo("Chrome")
-                .createdAt(LocalDateTime.now())
-                .isActive(true)
-                .build();
+        String sessionId = "abc-123";
+        Session session = new Session(); // session Entity
+        HttpSession httpSession = mock(HttpSession.class);
 
-        SessionResponseDto responseDto = new SessionResponseDto();
-        responseDto.setSessionId("abc123");
-
-        Page<Session> sessionPage = new PageImpl<>(List.of(session));
-
-        // 🔁 UPDATED: match the actual repository method used in your service
-        when(sessionRepository.findAllByIsActiveTrue (any(Pageable.class))).thenReturn(sessionPage);
-        when(sessionMapper.toDto(session)).thenReturn(responseDto);
+        when(userSessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(session));
 
         // When
-        Page<SessionResponseDto> result = sessionService.getActiveSessions(PageRequest.of(0, 10));
+        sessionService.revokeSessionById(sessionId, httpSession);
 
         // Then
-        assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getSessionId()).isEqualTo("abc123");
-
-        // 🔁 UPDATED: match the method you mocked above
-        verify(sessionRepository).findAllByIsActiveTrue(any(Pageable.class));
-        verify(sessionMapper).toDto(session);
+        verify(userSessionRepository).findBySessionId(sessionId);
+        verify(httpSession).invalidate();
+        verify(userSessionRepository).deleteBySessionId(sessionId);
     }
-
 
     @Test
     void testRevokeSessionById_whenSessionNotFound_shouldThrowException() {
-        // Given
-        String sessionId = "nonexistent";
-        when(sessionRepository.findBySessionId(sessionId)).thenReturn(java.util.Optional.empty());
+        String sessionId = "not-found";
+        HttpSession httpSession = mock(HttpSession.class);
 
-        // Then
-//        org.junit.jupiter.api.Assertions.assertThrows(
-//                com.talentradar.user_service.exception.SessionNotFoundException.class,
-//                () -> sessionService.revokeSessionById(sessionId)
-//        );
+        when(userSessionRepository.findBySessionId(sessionId)).thenReturn(Optional.empty());
 
-        verify(sessionRepository).findBySessionId(sessionId);
-        verify(sessionRepository, never()).deleteBySessionId(anyString());
+        Assertions.assertThrows(SessionNotFoundException.class, () -> {
+            sessionService.revokeSessionById(sessionId, httpSession);
+        });
+
+        verify(httpSession, never()).invalidate();
+        verify(userSessionRepository, never()).deleteBySessionId(any());
     }
 }
