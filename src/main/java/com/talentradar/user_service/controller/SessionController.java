@@ -34,7 +34,7 @@ public class SessionController {
     @Operation(summary = "Fetch all active session",
             description = "This end point allow only admin to view all of the active session")
     @PreAuthorize("hasRole('Admin')")
-    public ResponseEntity<ResponseDto> viewProjects(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<ResponseDto> viewActiveSession(HttpServletRequest request, Pageable pageable){
         Page<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
         ResponseDto response = ResponseDto.builder()
                 .status(true)
