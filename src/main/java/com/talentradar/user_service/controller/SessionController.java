@@ -14,13 +14,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/v1/admin")
@@ -34,7 +38,7 @@ public class SessionController {
     @Operation(summary = "Fetch all active session",
             description = "This end point allow only admin to view all of the active session")
     @PreAuthorize("hasRole('Admin')")
-    public ResponseEntity<ResponseDto> viewProjects(HttpServletRequest request, Pageable pageable){
+    public ResponseEntity<ResponseDto> viewActiveSession(Pageable pageable){
         Page<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
         ResponseDto response = ResponseDto.builder()
                 .status(true)
@@ -61,4 +65,20 @@ public class SessionController {
                 .build();
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
+    @GetMapping(name = "filterSessions", path = "/sessions/filter")
+    @Operation(summary = "Filter all active session",
+            description = "This end point allow only admin to filter by userId and date")
+    public ResponseEntity<ResponseDto> filterSession(@RequestParam(required = false) UUID userId,
+                                                     @RequestParam(required = false) String date,
+                                                     Pageable pageable){
+        Page<SessionResponseDto> sessionsList = sessionService.filterSessions(userId, date, pageable);
+        ResponseDto response = ResponseDto.builder()
+                .status(true)
+                .message("Filter session")
+                .errors(List.of())
+                .data(sessionsList)
+                .build();
+        return ResponseEntity.status(HttpStatus.OK).body(response);
+    }
+
 }
