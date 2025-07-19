@@ -5,6 +5,7 @@ import com.talentradar.user_service.model.Session;
 import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.repository.UserSessionRepository;
 import com.talentradar.user_service.repository.UserRepository;
+import eu.bitwalker.useragentutils.UserAgent;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.ApplicationListener;
@@ -41,10 +42,17 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         HttpServletRequest request = ((ServletRequestAttributes)
                 RequestContextHolder.currentRequestAttributes()).getRequest();
 
+        // extract user metadata from header
         String ip = request.getRemoteAddr();
         String userAgent = request.getHeader("User-Agent");
-
         String sessionId = request.getSession().getId();
+        UserAgent agent = UserAgent.parseUserAgentString(userAgent);
+        String browser = agent.getBrowser().getName();
+        String os = agent.getOperatingSystem().getName();
+
+        logger.info("os :{} browser: {} agent: {}", os, browser, agent);
+        logger.info("User-Agent: {}", userAgent);
+        String deviceInfo = String.format("%s, %s-%s",os, browser,agent.getBrowserVersion());
 
         // Check if session with this sessionId already exists
         Session existing = userSessionRepository.findBySessionId(sessionId).orElse(null);
@@ -57,7 +65,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
                     .sessionId(sessionId)
                     .user(user)
                     .ipAddress(ip)
-                    .deviceInfo(userAgent)
+                    .deviceInfo(deviceInfo)
                     .createdAt(LocalDateTime.now())
                     .isActive(true)
                     .build();
