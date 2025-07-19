@@ -50,7 +50,7 @@ class SessionServiceTests {
 
         Page<Session> sessionPage = new PageImpl<>(List.of(session));
 
-        // UPDATED: match the actual repository method used in your service
+        // match the actual repository method used in your service
         when(userSessionRepository.findAllByIsActiveTrue (any(Pageable.class))).thenReturn(sessionPage);
         when(sessionMapper.toDto(session)).thenReturn(responseDto);
 
@@ -62,7 +62,7 @@ class SessionServiceTests {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getSessionId()).isEqualTo("abc123");
 
-        // UPDATED: match the method you mocked above
+        // match the method you mocked above
         verify(userSessionRepository).findAllByIsActiveTrue(any(Pageable.class));
         verify(sessionMapper).toDto(session);
     }

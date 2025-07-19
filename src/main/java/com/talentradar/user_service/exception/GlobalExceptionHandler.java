@@ -21,6 +21,7 @@ import org.springframework.web.context.request.WebRequest;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.ErrorResponse;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 @RestControllerAdvice
 @Hidden
@@ -104,9 +105,15 @@ public class GlobalExceptionHandler {
 
     // Handle all other exceptions
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<ErrorResponse> handleAllExceptions(Exception ex) {
-        ErrorResponse errorResponse = new ErrorResponse("An unexpected error occurred", null);
-        return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
+    public ResponseEntity<?> handleUnexpectedException
+    (Exception exception, WebRequest webRequest) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("Unexpected Exception")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     // handle user is not found exception
@@ -158,4 +165,43 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
+
+
+    // handle any unexpected Error
+    @ExceptionHandler(Error.class)
+    public ResponseEntity<?> handleError(Error error) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("Internal Server Error")
+                .errors(List.of(Map.of("message", error.getMessage())))
+                .data(null)
+                .build();
+
+        return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
+
+    // handle no url mapped
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<?> handle404(NoHandlerFoundException exception) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("Page/url no found")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
+    }
+
+    //Handle no internet connection
+    @ExceptionHandler(NoInternetConnectionException.class)
+    public ResponseEntity<?> noInternetConnection(NoInternetConnectionException exception) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("No internet connection")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
+    }
+
 }
