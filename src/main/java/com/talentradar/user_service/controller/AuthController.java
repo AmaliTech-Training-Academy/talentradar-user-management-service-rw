@@ -5,13 +5,7 @@ import java.util.Map;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PatchMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
 import com.talentradar.user_service.dto.InviteUserRequest;
@@ -34,7 +28,7 @@ public class AuthController {
 
     private final AuthenticationService authService;
     private final UserService userService;
-
+    
     @PostMapping("/login")
     public ResponseEntity<Object> signin(@RequestBody LoginRequestDto loginRequest) {
         Map<String, Object> loginResponse = authService.login(loginRequest);

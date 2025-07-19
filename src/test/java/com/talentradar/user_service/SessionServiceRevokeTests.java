@@ -4,12 +4,10 @@ import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.exception.SessionNotFoundException;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
-import com.talentradar.user_service.repository.UserRepository;
 import com.talentradar.user_service.repository.UserSessionRepository;
 import com.talentradar.user_service.service.SessionService;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -25,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class SessionServiceTest {
+class SessionServiceRevokeTests {
 
     @Mock
     private UserSessionRepository userSessionRepository;
@@ -52,7 +50,7 @@ class SessionServiceTest {
 
         Page<Session> sessionPage = new PageImpl<>(List.of(session));
 
-        // UPDATED: match the actual repository method used in your service
+        // match the actual repository method used in your service
         when(userSessionRepository.findAllByIsActiveTrue (any(Pageable.class))).thenReturn(sessionPage);
         when(sessionMapper.toDto(session)).thenReturn(responseDto);
 
@@ -64,7 +62,7 @@ class SessionServiceTest {
         assertThat(result.getContent()).hasSize(1);
         assertThat(result.getContent().get(0).getSessionId()).isEqualTo("abc123");
 
-        // UPDATED: match the method you mocked above
+        // match the method you mocked above
         verify(userSessionRepository).findAllByIsActiveTrue(any(Pageable.class));
         verify(sessionMapper).toDto(session);
     }

@@ -2,8 +2,8 @@ package com.talentradar.user_service.service;
 
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.dto.UserNotFoundException;
+import com.talentradar.user_service.exception.InvalidDateFormatException;
 import com.talentradar.user_service.exception.SessionNotFoundException;
-import com.talentradar.user_service.exception.UnauthorizedException;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
 import com.talentradar.user_service.repository.UserRepository;
@@ -32,7 +32,8 @@ public class SessionService {
     private final UserRepository userRepository;
 
     public Page<SessionResponseDto> getActiveSessions(Pageable pageable) {
-        Page<Session> sessionPage = this.userSessionRepository.findAllByIsActiveTrue(pageable);
+        Page<Session> sessionPage = this.userSessionRepository
+                .findAllByIsActiveTrue(pageable);
         logger.info("Admin fetched active sessions");
         return sessionPage.map(sessionMapper::toDto);
     }
@@ -41,7 +42,8 @@ public class SessionService {
     public void revokeSessionById(String sessionId, HttpSession sessionRequest) {
         if(this.userSessionRepository.findBySessionId(sessionId).isEmpty()){
             throw new SessionNotFoundException(
-                    String.format("The session with id email '%s' does not exist", sessionId));
+                    String.format("The session with id '%s' does not exist",
+                            sessionId));
 
         }
 
@@ -54,52 +56,78 @@ public class SessionService {
             String dateString,
             Pageable pageable
     ) {
-        Page<Session> sessionList;
-        LocalDate date = null;
+        logger.info("admin provided, userId= {} and date = {} for filtering",
+                userId, dateString);
 
-        //validate userId
+        // Filter Both userId and date if both are provided
+        if (isUserIdValid(userId) && userId != null && dateString != null
+            && !dateString.isEmpty()) {
+            LocalDate date = convertStringToLocalDate(dateString);
+            return filterByUserIdAndDate(userId, date, pageable);
+        }
+
+        // Filter only by userId
         if (userId != null) {
-            if(this.userRepository.findById(userId).isEmpty()){
-                throw new UserNotFoundException(
-                        String.format("The user with id '%s' does not exist", userId));
-
-            };
+            return filterByOnlyUserId(userId, pageable);
         }
 
-        // Validate user if provided
-        if (userId != null && userRepository.findById(userId).isEmpty()) {
-            throw new UserNotFoundException(
-                    String.format("The user with id '%s' does not exist", userId));
-        }
-
-        // Both userId and date provided
-        if (userId != null && date != null) {
-            LocalDateTime start = date.atStartOfDay();
-            LocalDateTime end = date.atTime(LocalTime.MAX);
-            return userSessionRepository
-                    .findByUserIdAndCreatedAtBetween(userId, start, end, pageable)
-                    .map(sessionMapper::toDto);
-        }
-
-        // Only userId
-        if (userId != null) {
-            return userSessionRepository
-                    .findAllByUserId(userId, pageable)
-                    .map(sessionMapper::toDto);
-        }
-
-        // Only date
-        if (date != null) {
-            LocalDateTime start = date.atStartOfDay();
-            LocalDateTime end = date.atTime(LocalTime.MAX);
-            return userSessionRepository
-                    .findByCreatedAtBetween(start, end, pageable)
-                    .map(sessionMapper::toDto);
+        //Filter only by date
+        if (dateString != null && !dateString.isEmpty()) {
+            LocalDate date = convertStringToLocalDate(dateString);
+            return filterByOnlyDate(date, pageable);
         }
 
         // No filter, return all
+        logger.info("Admin fetched with no filter");
         return userSessionRepository
                 .findAll(pageable)
+                .map(sessionMapper::toDto);
+
+    }
+
+    private boolean isUserIdValid(UUID userId){
+        if (userId != null && userRepository.findById(userId).isEmpty()) {
+            logger.info("Exception thrown, userId not found!");
+            throw new UserNotFoundException(
+                    String.format("The user with id '%s' does not exist", userId));
+        }
+        return true;
+    }
+
+    private LocalDate convertStringToLocalDate(String dateString){
+            logger.info("Exception thrown, date format is invalid!");
+            try {
+                return LocalDate.parse(dateString); // Expects format: yyyy-MM-dd
+            } catch (DateTimeParseException ex) {
+                throw new InvalidDateFormatException("Invalid date format. Expected yyyy-MM-dd " +
+                                                     "ex:2025-07-19");
+            }
+    }
+
+    private Page<SessionResponseDto> filterByUserIdAndDate(UUID userId, LocalDate date,
+                                                             Pageable pageable){
+        logger.info("Admin filtered by userId and date");
+
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
+        return userSessionRepository
+                .findByUserIdAndCreatedAtBetween(userId, start, end, pageable)
+                .map(sessionMapper::toDto);
+    }
+
+    private Page<SessionResponseDto> filterByOnlyDate(LocalDate date, Pageable pageable){
+        logger.info("Admin filtered only by date");
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(LocalTime.MAX);
+        return userSessionRepository
+                .findByCreatedAtBetween(start, end, pageable)
+                .map(sessionMapper::toDto);
+    }
+
+    private Page<SessionResponseDto> filterByOnlyUserId(UUID userId, Pageable pageable){
+        logger.info("Admin filtered only by userId");
+        return userSessionRepository
+                .findAllByUserId(userId, pageable)
                 .map(sessionMapper::toDto);
     }
 }
