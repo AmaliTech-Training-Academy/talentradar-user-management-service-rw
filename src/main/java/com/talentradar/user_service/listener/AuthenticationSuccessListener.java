@@ -53,6 +53,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
             logger.info("Create new session for user {}", email);
             // create new
             Session session = Session.builder()
+                    .id(null)
                     .sessionId(sessionId)
                     .user(user)
                     .ipAddress(ip)

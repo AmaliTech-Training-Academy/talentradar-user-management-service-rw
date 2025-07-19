@@ -4,12 +4,10 @@ import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.exception.SessionNotFoundException;
 import com.talentradar.user_service.mapper.SessionMapper;
 import com.talentradar.user_service.model.Session;
-import com.talentradar.user_service.repository.UserRepository;
 import com.talentradar.user_service.repository.UserSessionRepository;
 import com.talentradar.user_service.service.SessionService;
 import jakarta.servlet.http.HttpSession;
 import org.junit.jupiter.api.Assertions;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.*;
@@ -25,7 +23,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
-class SessionServiceTest {
+class SessionServiceTests {
 
     @Mock
     private UserSessionRepository userSessionRepository;

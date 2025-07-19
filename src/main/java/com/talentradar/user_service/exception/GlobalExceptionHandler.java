@@ -129,7 +129,7 @@ public class GlobalExceptionHandler {
             SessionNotFoundException exception, WebRequest webRequest) {
         ResponseDto response = ResponseDto.builder()
                 .status(false)
-                .message("SessionNotFound")
+                .message("SessionId doesnt exist")
                 .errors(List.of(Map.of("message", exception.getMessage())))
                 .data(null)
                 .build();

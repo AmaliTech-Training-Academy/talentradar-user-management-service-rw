@@ -41,7 +41,7 @@ public class SessionService {
     public void revokeSessionById(String sessionId, HttpSession sessionRequest) {
         if(this.userSessionRepository.findBySessionId(sessionId).isEmpty()){
             throw new SessionNotFoundException(
-                    String.format("The session with id email '%s' does not exist", sessionId));
+                    String.format("The session with id '%s' does not exist", sessionId));
 
         }
 
