@@ -2,6 +2,7 @@ package com.talentradar.user_service.service;
 
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
@@ -15,10 +16,13 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
-import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
+import com.talentradar.user_service.dto.EventRole;
+import com.talentradar.user_service.dto.EventType;
 import com.talentradar.user_service.dto.InviteUserRequest;
 import com.talentradar.user_service.dto.PageInfo;
+import com.talentradar.user_service.dto.ResponseDto;
+import com.talentradar.user_service.dto.UserCreatedEvent;
 import com.talentradar.user_service.dto.UserDto;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.exception.InvalidTokenException;
@@ -41,11 +45,11 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class UserService {
-
     private final UserRepository userRepository;
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
+    private final KafkaService kafkaService;
 
     @Value("${app.registration.token.secret}")
     private String registrationTokenSecret;
@@ -147,6 +151,45 @@ public class UserService {
         // Send email with the invite link
         emailService.sendRegistrationInvite(savedUser.getEmail(), inviteLink);
 
+        // Fire event if user is developer or manager
+        if (role.getRoleName().equalsIgnoreCase("DEVELOPER")) {
+
+            Role managerRole = roleRepository.findByRoleName("MANAGER")
+                    .orElseThrow(() -> new ResourceNotFoundException("Manager role not found"));
+
+            UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()
+                    .eventType(EventType.USER_CREATED)
+                    .userId(savedUser.getId())
+                    .managerId(managerRole.getId())
+                    .fullName(savedUser.getFullName())
+                    .username(savedUser.getUsername())
+                    .email(savedUser.getEmail())
+                    .role(EventRole.DEVELOPER)
+                    .timestamp(LocalDateTime.now())
+                    .eventId(UUID.randomUUID().toString())
+                    .source("user-service")
+                    .build();
+
+            kafkaService.sendUserCreatedEvent(userCreatedEvent);
+            // Create UserCreatedEvent for Developer and set manager id
+            log.info("Developer created event sent for user: {}", savedUser.getEmail());
+        } else if (role.getRoleName().equalsIgnoreCase("MANAGER")) {
+            UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()
+                    .eventType(EventType.USER_CREATED)
+                    .userId(savedUser.getId())
+                    .fullName(savedUser.getFullName())
+                    .username(savedUser.getUsername())
+                    .email(savedUser.getEmail())
+                    .role(EventRole.MANAGER)
+                    .timestamp(LocalDateTime.now())
+                    .eventId(UUID.randomUUID().toString())
+                    .source("user-service")
+                    .build();
+
+            kafkaService.sendUserCreatedEvent(userCreatedEvent);
+            log.info("Manager created event sent for user: {}", savedUser.getEmail());
+        }
+
         return savedUser;
     }
 
@@ -182,6 +225,8 @@ public class UserService {
             user.setUsername(generateUsername(request.getFullName()));
             user.setPassword(passwordEncoder.encode(request.getPassword()));
             user.setStatus(UserStatus.ACTIVE);
+
+            fireEventWhenUserUpdated(user);
 
             return userRepository.save(user);
 
@@ -271,5 +316,20 @@ public class UserService {
             log.error("Invalid user ID in token: {}", ex.getMessage());
             throw new InvalidTokenException("Invalid user ID in token");
         }
+    }
+
+    private void fireEventWhenUserUpdated(User user) {
+        UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()
+                .eventType(EventType.USER_UPDATED)
+                .userId(user.getId())
+                .fullName(user.getFullName())
+                .username(user.getUsername())
+                .eventId(UUID.randomUUID().toString())
+                .timestamp(LocalDateTime.now())
+                .source("user-service")
+                .build();
+
+        kafkaService.sendUserUpdatedEvent(userCreatedEvent);
+        log.info("User updated event sent for user: {}", user.getEmail());
     }
 }
