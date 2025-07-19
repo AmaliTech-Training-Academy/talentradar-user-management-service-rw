@@ -21,7 +21,6 @@ import org.springframework.web.context.request.WebRequest;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.ErrorResponse;
-import com.talentradar.user_service.dto.UserNotFoundException;
 
 @RestControllerAdvice
 @Hidden
@@ -110,10 +109,10 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(errorResponse, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // handle user is not found exception response
+    // handle user is not found exception
     @ExceptionHandler(NotFoundUserException.class)
     public ResponseEntity<?> handleUserNotFound(
-            UserNotFoundException exception, WebRequest webRequest) {
+            UserNotFoundException exception) {
         ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("UserNotFound")
@@ -123,10 +122,23 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    // handle user is not found exception response
+    // handle invalid date format exception
+    @ExceptionHandler(InvalidDateFormatException.class)
+    public ResponseEntity<?> handleUserInvalidDateFormat(
+            InvalidDateFormatException exception) {
+        ResponseDto response = ResponseDto.builder()
+                .status(false)
+                .message("Invalid date format")
+                .errors(List.of(Map.of("message", exception.getMessage())))
+                .data(null)
+                .build();
+        return new ResponseEntity<>(response, HttpStatus.BAD_REQUEST);
+    }
+
+    // handle session is not found exception response
     @ExceptionHandler(SessionNotFoundException.class)
     public ResponseEntity<?> handleSessionNotFound(
-            SessionNotFoundException exception, WebRequest webRequest) {
+            SessionNotFoundException exception) {
         ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("SessionId doesnt exist")
@@ -137,7 +149,7 @@ public class GlobalExceptionHandler {
     }
     @ExceptionHandler(UnauthorizedException.class)
     public ResponseEntity<?> handleUnauthorizedException
-            (UnauthorizedException unauthorizedException, WebRequest webRequest) {
+            (UnauthorizedException unauthorizedException) {
         ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("Unauthorized Exception")
