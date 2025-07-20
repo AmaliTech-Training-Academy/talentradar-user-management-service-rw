@@ -74,7 +74,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
             logger.info("Update user {} session", email);
             // update fields
             existing.setIpAddress(ip);
-            existing.setDeviceInfo(userAgent);
+            existing.setDeviceInfo(deviceInfo);
             existing.setActive(true);
             existing.setCreatedAt(LocalDateTime.now());
             userSessionRepository.save(existing);

@@ -1,5 +1,6 @@
 package com.talentradar.user_service.service;
 
+import com.talentradar.user_service.dto.CustomPageResponse;
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.exception.InvalidDateFormatException;
@@ -31,11 +32,21 @@ public class SessionService {
     private final SessionMapper sessionMapper;
     private final UserRepository userRepository;
 
-    public Page<SessionResponseDto> getActiveSessions(Pageable pageable) {
+    public CustomPageResponse<SessionResponseDto> getActiveSessions(Pageable pageable) {
         Page<Session> sessionPage = this.userSessionRepository
                 .findAllByIsActiveTrue(pageable);
         logger.info("Admin fetched active sessions");
-        return sessionPage.map(sessionMapper::toDto);
+        Page<SessionResponseDto> sessions = sessionPage.map(sessionMapper::toDto);
+
+        return CustomPageResponse.<SessionResponseDto>builder()
+                .items(sessions.getContent())
+                .page(sessions.getNumber())
+                .size(sessions.getSize())
+                .totalElements(sessions.getTotalElements())
+                .totalPages(sessions.getTotalPages())
+                .hasNext(sessions.hasNext())
+                .hasPrevious(sessions.hasPrevious())
+                .build();
     }
 
     @Transactional
@@ -51,7 +62,7 @@ public class SessionService {
         this.userSessionRepository.deleteBySessionId(sessionId); // this session data in DB
         logger.info("Admin revoked session with ID: {}", sessionId);
     }
-    public Page<SessionResponseDto> filterSessions(
+    public CustomPageResponse<SessionResponseDto> filterSessions(
             UUID userId,
             String dateString,
             Pageable pageable
@@ -79,10 +90,19 @@ public class SessionService {
 
         // No filter, return all
         logger.info("Admin fetched with no filter");
-        return userSessionRepository
+        Page<SessionResponseDto> sessions =  userSessionRepository
                 .findAll(pageable)
                 .map(sessionMapper::toDto);
 
+        return CustomPageResponse.<SessionResponseDto>builder()
+                .items(sessions.getContent())
+                .page(sessions.getNumber())
+                .size(sessions.getSize())
+                .totalElements(sessions.getTotalElements())
+                .totalPages(sessions.getTotalPages())
+                .hasNext(sessions.hasNext())
+                .hasPrevious(sessions.hasPrevious())
+                .build();
     }
 
     private boolean isUserIdValid(UUID userId){
@@ -104,30 +124,61 @@ public class SessionService {
             }
     }
 
-    private Page<SessionResponseDto> filterByUserIdAndDate(UUID userId, LocalDate date,
+    private CustomPageResponse<SessionResponseDto> filterByUserIdAndDate(UUID userId, LocalDate date,
                                                              Pageable pageable){
         logger.info("Admin filtered by userId and date");
 
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
-        return userSessionRepository
+
+        Page<SessionResponseDto> sessions = userSessionRepository
                 .findByUserIdAndCreatedAtBetween(userId, start, end, pageable)
                 .map(sessionMapper::toDto);
+
+        return CustomPageResponse.<SessionResponseDto>builder()
+                .items(sessions.getContent())
+                .page(sessions.getNumber())
+                .size(sessions.getSize())
+                .totalElements(sessions.getTotalElements())
+                .totalPages(sessions.getTotalPages())
+                .hasNext(sessions.hasNext())
+                .hasPrevious(sessions.hasPrevious())
+                .build();
     }
 
-    private Page<SessionResponseDto> filterByOnlyDate(LocalDate date, Pageable pageable){
+    private CustomPageResponse<SessionResponseDto> filterByOnlyDate(LocalDate date, Pageable pageable){
         logger.info("Admin filtered only by date");
         LocalDateTime start = date.atStartOfDay();
         LocalDateTime end = date.atTime(LocalTime.MAX);
-        return userSessionRepository
+        Page<SessionResponseDto> sessions =  userSessionRepository
                 .findByCreatedAtBetween(start, end, pageable)
                 .map(sessionMapper::toDto);
+
+        return CustomPageResponse.<SessionResponseDto>builder()
+                .items(sessions.getContent())
+                .page(sessions.getNumber())
+                .size(sessions.getSize())
+                .totalElements(sessions.getTotalElements())
+                .totalPages(sessions.getTotalPages())
+                .hasNext(sessions.hasNext())
+                .hasPrevious(sessions.hasPrevious())
+                .build();
     }
 
-    private Page<SessionResponseDto> filterByOnlyUserId(UUID userId, Pageable pageable){
+    private CustomPageResponse<SessionResponseDto> filterByOnlyUserId(UUID userId, Pageable pageable){
         logger.info("Admin filtered only by userId");
-        return userSessionRepository
+        Page<SessionResponseDto> sessions = userSessionRepository
                 .findAllByUserId(userId, pageable)
                 .map(sessionMapper::toDto);
+
+        return CustomPageResponse.<SessionResponseDto>builder()
+                .items(sessions.getContent())
+                .page(sessions.getNumber())
+                .size(sessions.getSize())
+                .totalElements(sessions.getTotalElements())
+                .totalPages(sessions.getTotalPages())
+                .hasNext(sessions.hasNext())
+                .hasPrevious(sessions.hasPrevious())
+                .build();
     }
 }
