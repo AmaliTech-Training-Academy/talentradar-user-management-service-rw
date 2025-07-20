@@ -1,5 +1,6 @@
 package com.talentradar.user_service;
 
+import com.talentradar.user_service.dto.CustomPageResponse;
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.exception.SessionNotFoundException;
 import com.talentradar.user_service.mapper.SessionMapper;
@@ -55,12 +56,12 @@ class SessionServiceRevokeTests {
         when(sessionMapper.toDto(session)).thenReturn(responseDto);
 
         // When
-        Page<SessionResponseDto> result = sessionService.getActiveSessions(PageRequest.of(0, 10));
+        CustomPageResponse<SessionResponseDto> result = sessionService.getActiveSessions(PageRequest.of(0, 10));
 
         // Then
         assertThat(result).isNotNull();
-        assertThat(result.getContent()).hasSize(1);
-        assertThat(result.getContent().get(0).getSessionId()).isEqualTo("abc123");
+        assertThat(result.getItems()).hasSize(1);
+        assertThat(result.getItems().get(0).getSessionId()).isEqualTo("abc123");
 
         // match the method you mocked above
         verify(userSessionRepository).findAllByIsActiveTrue(any(Pageable.class));

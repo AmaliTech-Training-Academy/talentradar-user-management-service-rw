@@ -1,5 +1,6 @@
 package com.talentradar.user_service;
 
+import com.talentradar.user_service.dto.CustomPageResponse;
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.dto.UserNotFoundException;
 import com.talentradar.user_service.exception.InvalidDateFormatException;
@@ -49,9 +50,9 @@ public class SessionServiceFilterTest {
         when(userSessionRepository.findAllByUserId(userId, pageable)).thenReturn(new PageImpl<>(sessions));
         when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
 
-        Page<SessionResponseDto> result = sessionService.filterSessions(userId, null, pageable);
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(userId, null, pageable);
 
-        assertEquals(1, result.getContent().size());
+        assertEquals(1, result.getItems().size());
         verify(userSessionRepository).findAllByUserId(userId, pageable);
     }
 
@@ -66,9 +67,9 @@ public class SessionServiceFilterTest {
         when(userSessionRepository.findByCreatedAtBetween(start, end, pageable)).thenReturn(new PageImpl<>(sessions));
         when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
 
-        Page<SessionResponseDto> result = sessionService.filterSessions(null, dateStr, pageable);
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(null, dateStr, pageable);
 
-        assertEquals(1, result.getContent().size());
+        assertEquals(1, result.getItems().size());
         verify(userSessionRepository).findByCreatedAtBetween(start, end, pageable);
     }
 
@@ -85,9 +86,9 @@ public class SessionServiceFilterTest {
                 .thenReturn(new PageImpl<>(sessions));
         when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
 
-        Page<SessionResponseDto> result = sessionService.filterSessions(userId, dateStr, pageable);
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(userId, dateStr, pageable);
 
-        assertEquals(1, result.getContent().size());
+        assertEquals(1, result.getItems().size());
         verify(userSessionRepository).findByUserIdAndCreatedAtBetween(userId, start, end, pageable);
     }
 
@@ -97,9 +98,9 @@ public class SessionServiceFilterTest {
         when(userSessionRepository.findAll(pageable)).thenReturn(new PageImpl<>(sessions));
         when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
 
-        Page<SessionResponseDto> result = sessionService.filterSessions(null, null, pageable);
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(null, null, pageable);
 
-        assertEquals(1, result.getContent().size());
+        assertEquals(1, result.getItems().size());
         verify(userSessionRepository).findAll(pageable);
     }
 

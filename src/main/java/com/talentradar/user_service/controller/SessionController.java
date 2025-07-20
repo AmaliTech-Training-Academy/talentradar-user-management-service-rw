@@ -1,5 +1,6 @@
 package com.talentradar.user_service.controller;
 
+import com.talentradar.user_service.dto.CustomPageResponse;
 import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.service.SessionService;
@@ -32,7 +33,7 @@ public class SessionController {
     @PreAuthorize("hasRole('Admin')")
     public ResponseEntity<ResponseDto> viewActiveSession(Pageable pageable){
         logger.info("Admin requests fetched active session list");
-        Page<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
+        CustomPageResponse<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
         ResponseDto response = ResponseDto.builder()
                 .status(true)
                 .message("Fetch session list")
@@ -69,7 +70,7 @@ public class SessionController {
                                                      @RequestParam(required = false) String date,
                                                      Pageable pageable){
         logger.info("Admin requests filter session list");
-        Page<SessionResponseDto> sessionsList = sessionService.filterSessions(userId, date, pageable);
+        CustomPageResponse<SessionResponseDto> sessionsList = sessionService.filterSessions(userId, date, pageable);
         ResponseDto response = ResponseDto.builder()
                 .status(true)
                 .message("Filter session list")
