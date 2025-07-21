@@ -11,7 +11,6 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -30,7 +29,7 @@ public class SessionController {
     @GetMapping(name = "fetchActiveSessions", path = "/sessions")
     @Operation(summary = "Fetch all active session",
             description = "This end point allows only admin to view all of the active session")
-    @PreAuthorize("hasRole('Admin')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     public ResponseEntity<ResponseDto> viewActiveSession(Pageable pageable){
         logger.info("Admin requests fetched active session list");
         CustomPageResponse<SessionResponseDto> sessionsList = sessionService.getActiveSessions(pageable);
@@ -43,14 +42,13 @@ public class SessionController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @DeleteMapping(name = "revokeASingleSession", path = "/sessions/{sessionId}")
     @Operation(summary = "Delete a single session",
             description = "This end point allows only admin to delete/revoke a session using its id")
-    public ResponseEntity<?> deleteSession(@PathVariable String sessionId, HttpServletRequest request){
+    public ResponseEntity<?> deleteSession(@PathVariable String sessionId){
         logger.info("Admin requests revoke session");
-        HttpSession session = request.getSession(false); // get current session
-        this.sessionService.revokeSessionById(sessionId, session);
+        this.sessionService.revokeSessionById(sessionId);
         String message = String.format("The session with id '%s' revoked successfully", sessionId);
         ResponseDto response = ResponseDto.builder()
                 .status(true)
@@ -62,7 +60,7 @@ public class SessionController {
         return ResponseEntity.status(HttpStatus.OK).body(response);
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    @PreAuthorize("hasRole('ROLE_ADMIN')")
     @GetMapping(name = "filterSessions", path = "/sessions/filter")
     @Operation(summary = "Filter all active session",
             description = "This end point allows only admin to filter by userId and date")

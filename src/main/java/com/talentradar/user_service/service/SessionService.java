@@ -13,6 +13,7 @@ import jakarta.servlet.http.HttpSession;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.session.SessionRepository;
 import org.springframework.stereotype.Service;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,6 +32,7 @@ public class SessionService {
     private final UserSessionRepository userSessionRepository;
     private final SessionMapper sessionMapper;
     private final UserRepository userRepository;
+    private final SessionRepository sessionRepository;
 
     public CustomPageResponse<SessionResponseDto> getActiveSessions(Pageable pageable) {
         Page<Session> sessionPage = this.userSessionRepository
@@ -50,7 +52,7 @@ public class SessionService {
     }
 
     @Transactional
-    public void revokeSessionById(String sessionId, HttpSession sessionRequest) {
+    public void revokeSessionById(String sessionId) {
         if(this.userSessionRepository.findBySessionId(sessionId).isEmpty()){
             throw new SessionNotFoundException(
                     String.format("The session with id '%s' does not exist",
@@ -58,7 +60,7 @@ public class SessionService {
 
         }
 
-        sessionRequest.invalidate(); // this deletes session from Redis
+        sessionRepository.deleteById(sessionId); //delete from redis
         this.userSessionRepository.deleteBySessionId(sessionId); // this session data in DB
         logger.info("Admin revoked session with ID: {}", sessionId);
     }
