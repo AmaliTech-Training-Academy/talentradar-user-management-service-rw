@@ -14,6 +14,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.*;
+import org.springframework.session.SessionRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -37,7 +38,8 @@ public class SessionServiceFilterTest {
         userSessionRepository = mock(UserSessionRepository.class);
         sessionMapper = mock(SessionMapper.class);
         userRepository = mock(UserRepository.class);
-        sessionService = new SessionService(userSessionRepository, sessionMapper, userRepository);
+        SessionRepository redisSessionRepository = mock(SessionRepository.class);
+        sessionService = new SessionService(userSessionRepository, sessionMapper, userRepository, redisSessionRepository);
         pageable = PageRequest.of(0, 10);
         userId = UUID.randomUUID();
     }
