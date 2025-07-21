@@ -6,7 +6,7 @@ import org.springframework.stereotype.Service;
 
 import com.talentradar.user_service.dto.UserCreatedEvent;
 
-@Service
+// @Service
 public class KafkaService {
     private final KafkaTemplate<String, UserCreatedEvent> kafkaTemplate;
 
@@ -22,6 +22,7 @@ public class KafkaService {
 
     public void sendUserCreatedEvent(UserCreatedEvent userCreatedEvent) {
         kafkaTemplate.send(userCreatedTopic, userCreatedEvent);
+        System.out.println("******************************* MESSAGE SENT ************************************");
     }
 
     public void sendUserUpdatedEvent(UserCreatedEvent userUpdatedEvent) {
