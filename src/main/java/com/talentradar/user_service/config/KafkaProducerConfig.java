@@ -15,7 +15,7 @@ import org.springframework.kafka.support.serializer.JsonSerializer;
 
 import com.talentradar.user_service.dto.UserCreatedEvent;
 
-@Configuration
+// @Configuration
 public class KafkaProducerConfig {
     @Value("${spring.kafka.bootstrap-servers}")
     private String bootstrapServers;

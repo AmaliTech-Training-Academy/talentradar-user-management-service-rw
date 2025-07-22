@@ -8,6 +8,8 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -16,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.util.UriComponentsBuilder;
 
+import com.talentradar.user_service.config.RabbitConfig;
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
 import com.talentradar.user_service.dto.EventRole;
 import com.talentradar.user_service.dto.EventType;
@@ -49,7 +52,9 @@ public class UserService {
     private final RoleRepository roleRepository;
     private final PasswordEncoder passwordEncoder;
     private final EmailService emailService;
-    private final KafkaService kafkaService;
+    // private final KafkaService kafkaService;
+
+    private final RabbitTemplate rabbitTemplate;
 
     @Value("${app.registration.token.secret}")
     private String registrationTokenSecret;
@@ -151,7 +156,7 @@ public class UserService {
         // Send email with the invite link
         emailService.sendRegistrationInvite(savedUser.getEmail(), inviteLink);
 
-        // Fire event if user is developer or manager
+        // // Fire event if user is developer or manager
         if (role.getRoleName().equalsIgnoreCase("DEVELOPER")) {
 
             Role managerRole = roleRepository.findByRoleName("MANAGER")
@@ -170,7 +175,8 @@ public class UserService {
                     .source("user-service")
                     .build();
 
-            kafkaService.sendUserCreatedEvent(userCreatedEvent);
+            // kafkaService.sendUserCreatedEvent(userCreatedEvent);
+            rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_USER_CREATED, userCreatedEvent);
             // Create UserCreatedEvent for Developer and set manager id
             log.info("Developer created event sent for user: {}", savedUser.getEmail());
         } else if (role.getRoleName().equalsIgnoreCase("MANAGER")) {
@@ -186,7 +192,7 @@ public class UserService {
                     .source("user-service")
                     .build();
 
-            kafkaService.sendUserCreatedEvent(userCreatedEvent);
+            rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_USER_CREATED, userCreatedEvent);
             log.info("Manager created event sent for user: {}", savedUser.getEmail());
         }
 
@@ -320,7 +326,7 @@ public class UserService {
     }
 
     private void fireEventWhenUserUpdated(User user) {
-        UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()
+        UserCreatedEvent userUpdatedEvent = new UserCreatedEvent().builder()
                 .eventType(EventType.USER_UPDATED)
                 .userId(user.getId())
                 .fullName(user.getFullName())
@@ -330,7 +336,7 @@ public class UserService {
                 .source("user-service")
                 .build();
 
-        kafkaService.sendUserUpdatedEvent(userCreatedEvent);
+        rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_USER_UPDATED, userUpdatedEvent);
         log.info("User updated event sent for user: {}", user.getEmail());
     }
 }

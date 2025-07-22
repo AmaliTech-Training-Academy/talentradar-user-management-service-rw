@@ -35,8 +35,8 @@ public class AuthController {
         // Put token in httpOnly cookie
         HttpHeaders headers = new HttpHeaders();
 
-        headers.add(HttpHeaders.SET_COOKIE, "token=" + loginResponse.get("token")
-                + "; HttpOnly; Path=/; Max-Age=3600; secure=false; SameSite=Strict");
+        // Only for local dev, unsafe in production
+        headers.add(HttpHeaders.SET_COOKIE, "token=" + loginResponse.get("token") + "; HttpOnly; Path=/; Max-Age=3600; SameSite=None; Secure=false");
 
         return ResponseEntity.ok()
                 .headers(headers)
