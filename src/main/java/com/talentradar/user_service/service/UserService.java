@@ -145,13 +145,13 @@ public class UserService {
         User user = new User();
         user.setEmail(request.getEmail());
         user.setRole(role);
-        // Status is set to INACTIVE by default in the @PrePersist method
+
 
         User savedUser = userRepository.save(user);
 
         // Generate and send registration token
         String token = generateRegistrationToken(savedUser);
-        String inviteLink = createInvitationLink(token);
+        String inviteLink = createInvitationLink(savedUser.getEmail(),token);
 
         // Send email with the invite link
         emailService.sendRegistrationInvite(savedUser.getEmail(), inviteLink);
@@ -278,9 +278,10 @@ public class UserService {
         return new javax.crypto.spec.SecretKeySpec(keyBytes, "HmacSHA256");
     }
 
-    private String createInvitationLink(String token) {
+    private String createInvitationLink(String email, String token) {
         return UriComponentsBuilder.fromHttpUrl(baseUrl)
-                .path("/api/v1/auth/complete-registration")
+                .path("/register")
+                .queryParam("email", email)
                 .queryParam("token", token)
                 .toUriString();
     }
@@ -302,7 +303,7 @@ public class UserService {
 
     /**
      * Validates a registration token and returns the associated user if valid.
-     * 
+     *
      * @param token The registration token to validate
      * @return The user associated with the token
      * @throws InvalidTokenException if the token is invalid or expired
