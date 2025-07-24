@@ -19,7 +19,7 @@ public class JwtUtils {
     @Value("${spring.security.jwt.secret}")
     private String jwtSecret;
 
-    @Value("${spring.security.jwt.expirationMs}")
+    @Value("${spring.security.jwt.expirationMs:86400000}")
     private String jwtExpirationMS;
 
     // Generate Jwt token
@@ -29,12 +29,15 @@ public class JwtUtils {
                 .findFirst()
                 .map(GrantedAuthority::getAuthority)
                 .orElse(null);
+        Date now = new Date();
+        Date expiryDate = new Date(now.getTime() + Integer.parseInt(jwtExpirationMS));
         return Jwts.builder().subject(String.valueOf(userDetails
                 .getUserId())).issuedAt(new Date())
+                .issuedAt(now)
                 .claim("email", userDetails.getEmail())
                 .claim("fullName", userDetails.getUser().getFullName())
                 .claim("role", userRole)
-                .expiration(new Date((new Date()).getTime() + Long.parseLong(jwtExpirationMS)))
+                .expiration(expiryDate)
                 .signWith(key()).compact();
     }
 

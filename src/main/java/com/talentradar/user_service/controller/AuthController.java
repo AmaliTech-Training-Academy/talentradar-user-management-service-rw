@@ -2,6 +2,7 @@ package com.talentradar.user_service.controller;
 
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,6 +27,9 @@ import lombok.extern.slf4j.Slf4j;
 @RequiredArgsConstructor
 public class AuthController {
 
+    @Value("${spring.security.cookie.expiration:86400}")
+    private int cookieExpiration;
+
     private final AuthenticationService authService;
     private final UserService userService;
 
@@ -36,7 +40,8 @@ public class AuthController {
         HttpHeaders headers = new HttpHeaders();
 
         // Only for local dev, unsafe in production
-        headers.add(HttpHeaders.SET_COOKIE, "token=" + loginResponse.get("token") + "; HttpOnly; Path=/; Max-Age=3600; SameSite=None; Secure=false");
+        headers.add(HttpHeaders.SET_COOKIE, "token=" + loginResponse.get("token")
+                + "; HttpOnly; Path=/; Max-Age=" + cookieExpiration + "; SameSite=None; Secure=false");
 
         return ResponseEntity.ok()
                 .headers(headers)
