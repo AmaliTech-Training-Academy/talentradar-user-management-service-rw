@@ -1,13 +1,9 @@
 package com.talentradar.user_service.exception;
 
-import java.nio.file.AccessDeniedException;
-import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-import io.swagger.v3.oas.annotations.Hidden;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -16,12 +12,14 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
-
 import org.springframework.web.context.request.WebRequest;
-import com.talentradar.user_service.dto.UserNotFoundException;
-import com.talentradar.user_service.dto.ResponseDto;
-import com.talentradar.user_service.dto.ErrorResponse;
 import org.springframework.web.servlet.NoHandlerFoundException;
+
+import com.talentradar.user_service.dto.ErrorResponse;
+import com.talentradar.user_service.dto.ResponseDto;
+import com.talentradar.user_service.dto.UserNotFoundException;
+
+import io.swagger.v3.oas.annotations.Hidden;
 
 @RestControllerAdvice
 @Hidden
@@ -105,8 +103,7 @@ public class GlobalExceptionHandler {
 
     // Handle all other exceptions
     @ExceptionHandler(Exception.class)
-    public ResponseEntity<?> handleUnexpectedException
-    (Exception exception, WebRequest webRequest) {
+    public ResponseEntity<?> handleUnexpectedException(Exception exception, WebRequest webRequest) {
         ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("Unexpected Exception")
@@ -154,9 +151,9 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
+
     @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<?> handleUnauthorizedException
-            (UnauthorizedException unauthorizedException) {
+    public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException unauthorizedException) {
         ResponseDto response = ResponseDto.builder()
                 .status(false)
                 .message("Unauthorized Exception")
@@ -165,7 +162,6 @@ public class GlobalExceptionHandler {
                 .build();
         return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
     }
-
 
     // handle any unexpected Error
     @ExceptionHandler(Error.class)
@@ -192,7 +188,7 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    //Handle no internet connection
+    // Handle no internet connection
     @ExceptionHandler(NoInternetConnectionException.class)
     public ResponseEntity<?> noInternetConnection(NoInternetConnectionException exception) {
         ResponseDto response = ResponseDto.builder()

@@ -2,7 +2,6 @@ package com.talentradar.user_service.service;
 
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
-import org.springframework.stereotype.Service;
 
 import com.talentradar.user_service.dto.UserCreatedEvent;
 
@@ -22,7 +21,7 @@ public class KafkaService {
 
     public void sendUserCreatedEvent(UserCreatedEvent userCreatedEvent) {
         kafkaTemplate.send(userCreatedTopic, userCreatedEvent);
-        System.out.println("******************************* MESSAGE SENT ************************************");
+
     }
 
     public void sendUserUpdatedEvent(UserCreatedEvent userUpdatedEvent) {
