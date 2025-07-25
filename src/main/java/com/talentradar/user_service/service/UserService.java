@@ -9,7 +9,6 @@ import java.util.Map;
 import java.util.UUID;
 
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -146,12 +145,11 @@ public class UserService {
         user.setEmail(request.getEmail());
         user.setRole(role);
 
-
         User savedUser = userRepository.save(user);
 
         // Generate and send registration token
         String token = generateRegistrationToken(savedUser);
-        String inviteLink = createInvitationLink(savedUser.getEmail(),token);
+        String inviteLink = createInvitationLink(savedUser.getEmail(), token);
 
         // Send email with the invite link
         emailService.sendRegistrationInvite(savedUser.getEmail(), inviteLink);
