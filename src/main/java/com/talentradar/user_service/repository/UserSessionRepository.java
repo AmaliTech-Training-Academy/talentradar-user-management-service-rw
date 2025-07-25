@@ -1,6 +1,5 @@
 package com.talentradar.user_service.repository;
 
-import com.talentradar.user_service.dto.SessionResponseDto;
 import com.talentradar.user_service.model.Session;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;

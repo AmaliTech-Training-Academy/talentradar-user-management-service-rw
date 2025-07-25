@@ -24,7 +24,7 @@ LABEL maintainer="AmaliTech Training Academy" \
 
 # Set default environment variables (can be overridden)
 ENV SPRING_PROFILES_ACTIVE=production
-ENV SERVER_PORT=8081
+ENV SERVER_PORT=8090
 
 # Create a non-root user
 RUN useradd -r -u 1001 -g root userservice
@@ -36,7 +36,7 @@ COPY --from=builder --chown=userservice:root /build/target/*.jar ./application.j
 
 # Configure container
 USER 1001
-EXPOSE 8081
+EXPOSE 8090
 
 # Use the standard JAR execution
 ENTRYPOINT ["java", "-XX:+UseContainerSupport", "-XX:MaxRAMPercentage=75.0", "-Djava.security.egd=file:/dev/./urandom", "-jar", "application.jar"]
