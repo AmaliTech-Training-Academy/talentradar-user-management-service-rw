@@ -11,10 +11,17 @@ import java.util.UUID;
 
 public interface UserSessionRepository extends JpaRepository<Session, UUID> {
     Optional<Session> findBySessionId(String sessionId);
+
     Page<Session> findAllByIsActiveTrue(Pageable pageable);
+
     void deleteBySessionId(String sessionId);
+
     Page<Session> findAllByUserId(UUID userId, Pageable pageable);
+
     Page<Session> findByCreatedAtBetween(LocalDateTime start, LocalDateTime end, Pageable pageable);
-    Page<Session> findByUserIdAndCreatedAtBetween(UUID userId, LocalDateTime start, LocalDateTime end, Pageable pageable);
+
+    Page<Session> findByUserIdAndCreatedAtBetween(UUID userId, LocalDateTime start, LocalDateTime end,
+            Pageable pageable);
+
     Page<Session> findAll(Pageable pageable);
 }
