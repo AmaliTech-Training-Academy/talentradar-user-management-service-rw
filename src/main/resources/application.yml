@@ -13,10 +13,6 @@ spring:
   cloud:
     config:
       uri: ${SPRING_CLOUD_CONFIG_URI}
-  session:
-    store-type: redis
-    timeout: 30m
-
 
   profiles:
     active: prod
@@ -33,3 +29,7 @@ spring:
     jwt:
       secret: ${JWT_SECRET}
       expirationMs: 3600000
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOSTNAME}
+      port: ${SPRING_DATA_REDIS_PORT}
