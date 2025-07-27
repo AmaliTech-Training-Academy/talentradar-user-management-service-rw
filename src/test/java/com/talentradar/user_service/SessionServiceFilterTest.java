@@ -124,4 +124,63 @@ public class SessionServiceFilterTest {
         assertThrows(InvalidDateFormatException.class,
                 () -> sessionService.filterSessions(userId, invalidDate, pageable));
     }
+
+    @Test
+    void filterSessions_withEmptyDateAndValidUserId_shouldCallFilterByOnlyUserId() {
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mock()));
+
+        List<Session> sessions = List.of(new Session());
+        when(userSessionRepository.findAllByUserId(userId, pageable)).thenReturn(new PageImpl<>(sessions));
+        when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
+
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(userId, "", pageable);
+
+        assertEquals(1, result.getItems().size());
+        verify(userSessionRepository).findAllByUserId(userId, pageable);
+    }
+
+    @Test
+    void filterSessions_withDateAndNullUserId_shouldCallFilterByOnlyDate() {
+        String dateStr = "2025-07-20";
+        LocalDate date = LocalDate.parse(dateStr);
+        LocalDateTime start = date.atStartOfDay();
+        LocalDateTime end = date.atTime(23, 59, 59, 999_999_999);
+
+        List<Session> sessions = List.of(new Session());
+        when(userSessionRepository.findByCreatedAtBetween(start, end, pageable))
+                .thenReturn(new PageImpl<>(sessions));
+        when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
+
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(null, dateStr, pageable);
+
+        assertEquals(1, result.getItems().size());
+        verify(userSessionRepository).findByCreatedAtBetween(start, end, pageable);
+    }
+    @Test
+    void filterSessions_shouldPreservePaginationMeta() {
+        List<Session> sessions = List.of(new Session());
+        Page<Session> page = new PageImpl<>(sessions, pageable, 1);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mock()));
+        when(userSessionRepository.findAllByUserId(userId, pageable)).thenReturn(page);
+        when(sessionMapper.toDto(any())).thenReturn(mock(SessionResponseDto.class));
+
+        CustomPageResponse<SessionResponseDto> result = sessionService.filterSessions(userId, null, pageable);
+
+        assertEquals(1, result.getItems().size());
+        assertEquals(1, result.getTotalElements());
+        assertEquals(1, result.getTotalPages());
+        assertEquals(0, result.getPage());
+        assertEquals(10, result.getSize());
+    }
+
+    @Test
+    void filterSessions_withUserIdAndMalformedDate_shouldThrowInvalidDateFormat() {
+        String badDate = "July-25-2025";
+        when(userRepository.findById(userId)).thenReturn(Optional.of(mock()));
+
+        assertThrows(InvalidDateFormatException.class, () ->
+                sessionService.filterSessions(userId, badDate, pageable));
+    }
+
 }
