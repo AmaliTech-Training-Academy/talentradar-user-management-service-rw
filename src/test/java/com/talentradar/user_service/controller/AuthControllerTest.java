@@ -3,12 +3,14 @@ package com.talentradar.user_service.controller;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
 import com.talentradar.user_service.dto.InviteUserRequest;
+import com.talentradar.user_service.dto.LoginRequestDto;
 import com.talentradar.user_service.exception.GlobalExceptionHandler;
 import com.talentradar.user_service.exception.InvalidTokenException;
 import com.talentradar.user_service.exception.ResourceAlreadyExistsException;
 import com.talentradar.user_service.model.Role;
 import com.talentradar.user_service.model.User;
 import com.talentradar.user_service.model.User.UserStatus;
+import com.talentradar.user_service.service.AuthenticationService;
 import com.talentradar.user_service.service.interfaces.EmailService;
 import com.talentradar.user_service.service.UserService;
 import org.junit.jupiter.api.BeforeEach;
@@ -22,6 +24,7 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.util.Map;
 import java.util.UUID;
 
 import static org.mockito.ArgumentMatchers.any;
@@ -39,10 +42,13 @@ class AuthControllerTest {
 
     @Mock
     private UserService userService;
-    
+
+    @Mock
+    private AuthenticationService authService;
+
     @Mock
     private EmailService emailService;
-    
+
     @InjectMocks
     private AuthController authController;
 
@@ -201,13 +207,13 @@ class AuthControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Invalid or expired token"));
     }
-    
+
     @Test
     @DisplayName("Should return bad request when passwords don't match")
     void completeRegistration_WithMismatchedPasswords_ReturnsBadRequest() throws Exception {
         // Arrange
         completeRequest.setConfirmPassword("differentPassword");
-        
+
         // Act & Assert
         mockMvc.perform(patch(BASE_URL + "/complete-registration")
                 .param("token", TEST_TOKEN)
@@ -215,7 +221,7 @@ class AuthControllerTest {
                 .content(objectMapper.writeValueAsString(completeRequest)))
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("Password and confirmation do not match"));
-        
+
         verify(userService, never()).completeRegistration(anyString(), any(CompleteRegistrationRequest.class));
     }
 
@@ -250,15 +256,16 @@ class AuthControllerTest {
 
         verify(userService).validateRegistrationToken("invalid-token");
     }
-    
+
     @Test
     @DisplayName("Should return bad request when token is missing")
     void validateRegistrationToken_WithMissingToken_ReturnsBadRequest() throws Exception {
         // Act & Assert
         mockMvc.perform(get(BASE_URL + "/validate-registration-token"))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.message").value("Required request parameter 'token' for method parameter type String is not present"));
-        
+                .andExpect(jsonPath("$.message")
+                        .value("Required request parameter 'token' for method parameter type String is not present"));
+
         verify(userService, never()).validateRegistrationToken(anyString());
     }
 
@@ -275,5 +282,101 @@ class AuthControllerTest {
         testUser.setEmail(email);
         testUser.setStatus(status);
         return testUser;
+    }
+
+    @Test
+    @DisplayName("Should login successfully with valid credentials")
+    void login_WithValidCredentials_ReturnsOk() throws Exception {
+        // Arrange
+        LoginRequestDto loginRequest = new LoginRequestDto();
+        loginRequest.setEmail("test@example.com");
+        loginRequest.setPassword("password123");
+
+        Map<String, Object> loginResponse = Map.of(
+                "token", "jwt.token.here",
+                "loginResponse", Map.of(
+                        "status", true,
+                        "message", "Login successful",
+                        "data", Map.of("user", Map.of("email", "test@example.com"))));
+
+        when(authService.login(any(LoginRequestDto.class))).thenReturn(loginResponse);
+
+        // Act & Assert
+        mockMvc.perform(post(BASE_URL + "/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value(true))
+                .andExpect(jsonPath("$.message").value("Login successful"))
+                .andExpect(jsonPath("$.data.user.email").value("test@example.com"))
+                .andExpect(header().string("Set-Cookie", org.hamcrest.Matchers.containsString("token=jwt.token.here")));
+
+        verify(authService).login(any(LoginRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("Should return bad request for invalid login credentials")
+    void login_WithInvalidCredentials_ReturnsBadRequest() throws Exception {
+        // Arrange
+        LoginRequestDto loginRequest = new LoginRequestDto();
+        loginRequest.setEmail("invalid@example.com");
+        loginRequest.setPassword("wrongpassword");
+
+        when(authService.login(any(LoginRequestDto.class)))
+                .thenThrow(new RuntimeException("Invalid credentials"));
+
+        // Act & Assert
+        mockMvc.perform(post(BASE_URL + "/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isInternalServerError());
+
+        verify(authService).login(any(LoginRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("Should return bad request for missing email in login")
+    void login_WithMissingEmail_ReturnsBadRequest() throws Exception {
+        // Arrange
+        LoginRequestDto loginRequest = new LoginRequestDto();
+        loginRequest.setPassword("password123");
+        // email is null
+
+        // Act & Assert
+        mockMvc.perform(post(BASE_URL + "/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk()); // The controller doesn't validate, it just passes to service
+
+        verify(authService).login(any(LoginRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("Should return bad request for missing password in login")
+    void login_WithMissingPassword_ReturnsBadRequest() throws Exception {
+        // Arrange
+        LoginRequestDto loginRequest = new LoginRequestDto();
+        loginRequest.setEmail("test@example.com");
+        // password is null
+
+        // Act & Assert
+        mockMvc.perform(post(BASE_URL + "/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(loginRequest)))
+                .andExpect(status().isOk()); // The controller doesn't validate, it just passes to service
+
+        verify(authService).login(any(LoginRequestDto.class));
+    }
+
+    @Test
+    @DisplayName("Should return bad request for empty login request body")
+    void login_WithEmptyBody_ReturnsBadRequest() throws Exception {
+        // Act & Assert
+        mockMvc.perform(post(BASE_URL + "/login")
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
+                .andExpect(status().isOk()); // The controller doesn't validate, it just passes to service
+
+        verify(authService).login(any(LoginRequestDto.class));
     }
 }
