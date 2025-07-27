@@ -104,14 +104,14 @@ jobs:
         if: always()
         with:
           allure_results: allure-results
-          allure_history: allure-history
+          allure_history: allure
           subfolder: allure
           keep_reports: 1
 
       - name: Copy generated allure report and history
         run: |
           mkdir -p publish-reports/allure
-          cp -r allure-history/* publish-reports/allure/
+          cp -r allure/* publish-reports/allure/
 
       - name: Deploy to GitHub Pages
         if: always()
