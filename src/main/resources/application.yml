@@ -16,11 +16,6 @@ spring:
   session:
     store-type: redis
     timeout: 30m
-  data:
-    redis:
-      host: ${REDIS_HOSTNAME}
-      port: ${REDIS_PORT}
-
 
   profiles:
     active: prod
@@ -37,3 +32,7 @@ spring:
     jwt:
       secret: ${JWT_SECRET}
       expirationMs: 3600000
+  data:
+    redis:
+      host: ${SPRING_DATA_REDIS_HOSTNAME}
+      port: ${SPRING_DATA_REDIS_PORT}

@@ -41,7 +41,7 @@ public class AuthController {
 
         // Only for local dev, unsafe in production
         headers.add(HttpHeaders.SET_COOKIE, "token=" + loginResponse.get("token")
-                + "; HttpOnly; Path=/; Max-Age=" + cookieExpiration + "; SameSite=None; Secure=false");
+                + "; HttpOnly; Path=/; Max-Age=" + cookieExpiration + "; SameSite=None; Secure=true");
 
         return ResponseEntity.ok()
                 .headers(headers)

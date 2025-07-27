@@ -9,8 +9,8 @@ import org.springframework.context.annotation.Configuration;
 
 @Configuration
 public class RabbitConfig {
-    public static final String QUEUE_USER_CREATED = "user-created";
-    public static final String QUEUE_USER_UPDATED = "user-updated";
+    public static final String QUEUE_USER_CREATED = "user-created-event";
+    public static final String QUEUE_USER_UPDATED = "user-updated-event";
 
     @Bean
     public Queue userCreatedQueue() {

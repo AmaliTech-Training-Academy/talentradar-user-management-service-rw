@@ -5,6 +5,7 @@ import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -159,11 +160,15 @@ public class UserService {
 
             Role managerRole = roleRepository.findByRoleName("MANAGER")
                     .orElseThrow(() -> new ResourceNotFoundException("Manager role not found"));
+            List<User> managerUsers = userRepository.findByRole(managerRole);
+            if (managerUsers.isEmpty()) {
+                throw new ResourceNotFoundException("No manager found to assign to the developer");
+            }
 
             UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()
                     .eventType(EventType.USER_CREATED)
                     .userId(savedUser.getId())
-                    .managerId(managerRole.getId())
+                    .managerId(managerUsers.get(0).getId())
                     .fullName(savedUser.getFullName())
                     .username(savedUser.getUsername())
                     .email(savedUser.getEmail())
