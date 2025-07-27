@@ -113,19 +113,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
-    // handle user is not found exception
-    @ExceptionHandler(NotFoundUserException.class)
-    public ResponseEntity<?> handleUserNotFound(
-            UserNotFoundException exception) {
-        ResponseDto response = ResponseDto.builder()
-                .status(false)
-                .message("UserNotFound")
-                .errors(List.of(Map.of("message", exception.getMessage())))
-                .data(null)
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
     // handle invalid date format exception
     @ExceptionHandler(InvalidDateFormatException.class)
     public ResponseEntity<?> handleUserInvalidDateFormat(
@@ -152,17 +139,6 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
     }
 
-    @ExceptionHandler(UnauthorizedException.class)
-    public ResponseEntity<?> handleUnauthorizedException(UnauthorizedException unauthorizedException) {
-        ResponseDto response = ResponseDto.builder()
-                .status(false)
-                .message("Unauthorized Exception")
-                .errors(List.of(Map.of("message", unauthorizedException.getMessage())))
-                .data(null)
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.UNAUTHORIZED);
-    }
-
     // handle any unexpected Error
     @ExceptionHandler(Error.class)
     public ResponseEntity<?> handleError(Error error) {
@@ -186,18 +162,6 @@ public class GlobalExceptionHandler {
                 .data(null)
                 .build();
         return new ResponseEntity<>(response, HttpStatus.NOT_FOUND);
-    }
-
-    // Handle no internet connection
-    @ExceptionHandler(NoInternetConnectionException.class)
-    public ResponseEntity<?> noInternetConnection(NoInternetConnectionException exception) {
-        ResponseDto response = ResponseDto.builder()
-                .status(false)
-                .message("No internet connection")
-                .errors(List.of(Map.of("message", exception.getMessage())))
-                .data(null)
-                .build();
-        return new ResponseEntity<>(response, HttpStatus.SERVICE_UNAVAILABLE);
     }
 
 }
