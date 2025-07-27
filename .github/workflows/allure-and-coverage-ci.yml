@@ -80,47 +80,45 @@ jobs:
           ref: gh-pages
           path: gh-pages
 
-      - name: Download report dashboard HTML into publish-reports
+      - name: Download report dashboard HTML into publish
         run: |
-          mkdir -p publish-reports
-          curl -o publish-reports/index.html https://raw.githubusercontent.com/AmaliTech-Training-Academy/talentradar-qa-rw/refs/heads/report-coverage/reports-index.html
+          mkdir -p publish
+          curl -o publish/index.html https://raw.githubusercontent.com/AmaliTech-Training-Academy/talentradar-qa-rw/refs/heads/report-coverage/reports-index.html
 
       - name: Inject repo name and build date (UTC+2) into reports dashboard HTML
         run: |
           REPO_NAME=$(basename "$GITHUB_REPOSITORY")
           DATE=$(TZ="Etc/GMT-2" date +"%Y-%m-%d %H:%M UTC+2")
-          sed -i "s|{{REPO_NAME}}|$REPO_NAME|g" publish-reports/index.html
-          sed -i "s|{{BUILD_DATE}}|$DATE|g" publish-reports/index.html
+          sed -i "s|{{REPO_NAME}}|$REPO_NAME|g" publish/index.html
+          sed -i "s|{{BUILD_DATE}}|$DATE|g" publish/index.html
       
       - name: Download JaCoCo results
         uses: actions/download-artifact@v4
         continue-on-error: true
         with:
           name: jacoco
-          path: publish-reports/jacoco/
+          path: publish/jacoco/
 
       - name: List available allure cache
         continue-on-error: true
         run: |
-          echo "===== GH-PAGES ALLURE ====="
-          ls -la gh-pages/allure
-          echo "===== ALLURE ====="
-          ls -la allure
           echo "===== ALLURE HISTORY ====="
           ls -la allure-history
+
+      - name: Restore Allure history
+        run: |
+          mkdir -p publish/allure
+          if [ -d gh-pages/allure/last-history ]; then
+            cp -r gh-pages/allure/last-history publish/allure/
+          fi
 
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
         with:
           allure_results: allure-results
-          allure_history: allure-history
+          allure_history: publish/allure
           keep_reports: 1
-
-      - name: Copy generated allure report and history
-        run: |
-          mkdir -p publish-reports/allure
-          cp -r allure-history/* publish-reports/allure/
 
       - name: Deploy to GitHub Pages
         if: always()
@@ -128,5 +126,5 @@ jobs:
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_branch: gh-pages
-          publish_dir: publish-reports
+          publish_dir: publish
           force_orphan: true
