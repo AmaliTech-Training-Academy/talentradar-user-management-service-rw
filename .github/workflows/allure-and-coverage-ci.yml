@@ -105,6 +105,7 @@ jobs:
         with:
           allure_results: allure-results
           allure_history: allure-history
+          subfolder: allure
           keep_reports: 1
 
       - name: Copy generated allure report and history
