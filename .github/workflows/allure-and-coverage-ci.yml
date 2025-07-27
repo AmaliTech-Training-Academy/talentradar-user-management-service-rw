@@ -99,19 +99,28 @@ jobs:
           name: jacoco
           path: publish-reports/jacoco/
 
+      - name: List available allure cache
+        continue-on-error: true
+        run: |
+          echo "===== GH-PAGES ALLURE ====="
+          ls -la gh-pages/allure
+          echo "===== ALLURE ====="
+          ls -la allure
+          echo "===== ALLURE HISTORY ====="
+          ls -la allure-history
+
       - name: Generate Allure Report
         uses: simple-elf/allure-report-action@master
         if: always()
         with:
           allure_results: allure-results
-          allure_history: allure
-          subfolder: allure
+          allure_history: allure-history
           keep_reports: 1
 
       - name: Copy generated allure report and history
         run: |
           mkdir -p publish-reports/allure
-          cp -r allure/* publish-reports/allure/
+          cp -r allure-history/* publish-reports/allure/
 
       - name: Deploy to GitHub Pages
         if: always()
