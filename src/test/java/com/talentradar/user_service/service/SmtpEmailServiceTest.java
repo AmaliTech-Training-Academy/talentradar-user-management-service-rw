@@ -149,4 +149,108 @@ class SmtpEmailServiceTest {
         verify(mailSender, never()).createMimeMessage();
         verify(mailSender, never()).send(any(MimeMessage.class));
     }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when MimeMessage creation fails")
+    void sendRegistrationInvite_WhenMimeMessageCreationFails_ThrowsRuntimeException() {
+        // Arrange
+        when(mailSender.createMimeMessage()).thenReturn(null);
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite(TEST_EMAIL, TEST_INVITE_LINK);
+        });
+
+        // The actual error message varies, so we just verify it's a RuntimeException
+        assertNotNull(exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when email processing fails")
+    void sendRegistrationInvite_WhenEmailProcessingFails_ThrowsRuntimeException() {
+        // Arrange
+        when(mailSender.createMimeMessage()).thenReturn(mimeMessage);
+        doThrow(new RuntimeException("Email processing failed")).when(mailSender).send(any(MimeMessage.class));
+
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite(TEST_EMAIL, TEST_INVITE_LINK);
+        });
+
+        assertEquals("Email processing failed", exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, times(1)).send(mimeMessage);
+    }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when email address is invalid")
+    void sendRegistrationInvite_WithInvalidEmail_ThrowsRuntimeException() {
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite("invalid-email", TEST_INVITE_LINK);
+        });
+
+        // The actual error message varies, so we just verify it's a RuntimeException
+        assertNotNull(exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when invite link is invalid")
+    void sendRegistrationInvite_WithInvalidInviteLink_ThrowsRuntimeException() {
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite(TEST_EMAIL, "invalid-link");
+        });
+
+        // The actual error message varies, so we just verify it's a RuntimeException
+        assertNotNull(exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when both parameters are invalid")
+    void sendRegistrationInvite_WithBothInvalidParameters_ThrowsRuntimeException() {
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite("invalid-email", "invalid-link");
+        });
+
+        // The actual error message varies, so we just verify it's a RuntimeException
+        assertNotNull(exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when email contains special characters")
+    void sendRegistrationInvite_WithSpecialCharactersInEmail_ThrowsRuntimeException() {
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite("test@example.com<script>alert('xss')</script>", TEST_INVITE_LINK);
+        });
+
+        // The actual error message varies, so we just verify it's a RuntimeException
+        assertNotNull(exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
+
+    @Test
+    @DisplayName("Should throw RuntimeException when invite link contains malicious content")
+    void sendRegistrationInvite_WithMaliciousInviteLink_ThrowsRuntimeException() {
+        // Act & Assert
+        RuntimeException exception = assertThrows(RuntimeException.class, () -> {
+            smtpEmailService.sendRegistrationInvite(TEST_EMAIL, "javascript:alert('xss')");
+        });
+
+        // The actual error message varies, so we just verify it's a RuntimeException
+        assertNotNull(exception.getMessage());
+        verify(mailSender, times(1)).createMimeMessage();
+        verify(mailSender, never()).send(any(MimeMessage.class));
+    }
 }
