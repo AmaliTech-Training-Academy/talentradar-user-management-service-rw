@@ -1,13 +1,9 @@
 package com.talentradar.user_service.listener;
 
-import com.talentradar.user_service.exception.NotFoundUserException;
-import com.talentradar.user_service.model.Session;
-import com.talentradar.user_service.model.User;
-import com.talentradar.user_service.repository.UserSessionRepository;
-import com.talentradar.user_service.repository.UserRepository;
-import eu.bitwalker.useragentutils.UserAgent;
-import jakarta.servlet.http.HttpServletRequest;
-import lombok.RequiredArgsConstructor;
+import java.time.LocalDateTime;
+
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.context.ApplicationListener;
 import org.springframework.security.authentication.event.AuthenticationSuccessEvent;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -15,9 +11,15 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
 
-import java.time.LocalDateTime;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import com.talentradar.user_service.dto.UserNotFoundException;
+import com.talentradar.user_service.model.Session;
+import com.talentradar.user_service.model.User;
+import com.talentradar.user_service.repository.UserRepository;
+import com.talentradar.user_service.repository.UserSessionRepository;
+
+import eu.bitwalker.useragentutils.UserAgent;
+import jakarta.servlet.http.HttpServletRequest;
+import lombok.RequiredArgsConstructor;
 
 /* The class handles the event upon successful sign-in */
 @Service
@@ -34,13 +36,12 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
         logger.info("User '{}' logged in successfully", email);
         // check whether email exists
         User user = this.userRepository.findByEmail(email)
-                .orElseThrow(() -> new NotFoundUserException(
+                .orElseThrow(() -> new UserNotFoundException(
                         String.format("A user with the email '%s' does not exist",
-                                email))
-                );
+                                email)));
 
-        HttpServletRequest request = ((ServletRequestAttributes)
-                RequestContextHolder.currentRequestAttributes()).getRequest();
+        HttpServletRequest request = ((ServletRequestAttributes) RequestContextHolder.currentRequestAttributes())
+                .getRequest();
 
         // extract user metadata from header
         String ip = request.getRemoteAddr();
@@ -52,7 +53,7 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
 
         logger.info("os :{} browser: {} agent: {}", os, browser, agent);
         logger.info("User-Agent: {}", userAgent);
-        String deviceInfo = String.format("%s, %s-%s",os, browser,agent.getBrowserVersion());
+        String deviceInfo = String.format("%s, %s-%s", os, browser, agent.getBrowserVersion());
 
         // Check if session with this sessionId already exists
         Session existing = userSessionRepository.findBySessionId(sessionId).orElse(null);
@@ -82,5 +83,3 @@ public class AuthenticationSuccessListener implements ApplicationListener<Authen
 
     }
 }
-
-

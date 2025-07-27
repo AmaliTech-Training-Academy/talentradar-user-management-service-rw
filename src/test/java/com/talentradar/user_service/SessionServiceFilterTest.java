@@ -39,7 +39,8 @@ public class SessionServiceFilterTest {
         sessionMapper = mock(SessionMapper.class);
         userRepository = mock(UserRepository.class);
         SessionRepository redisSessionRepository = mock(SessionRepository.class);
-        sessionService = new SessionService(userSessionRepository, sessionMapper, userRepository, redisSessionRepository);
+        sessionService = new SessionService(userSessionRepository, sessionMapper, userRepository,
+                redisSessionRepository);
         pageable = PageRequest.of(0, 10);
         userId = UUID.randomUUID();
     }
@@ -109,8 +110,7 @@ public class SessionServiceFilterTest {
     @Test
     void filterSessions_withInvalidUserId_shouldThrowException() {
         when(userRepository.findById(userId)).thenReturn(Optional.empty());
-        assertThrows(UserNotFoundException.class, () ->
-                sessionService.filterSessions(userId, "2025-07-19", pageable));
+        assertThrows(UserNotFoundException.class, () -> sessionService.filterSessions(userId, "2025-07-19", pageable));
 
         verify(userRepository).findById(userId);
     }
@@ -121,7 +121,7 @@ public class SessionServiceFilterTest {
 
         when(userRepository.findById(userId)).thenReturn(Optional.of(mock()));
 
-        assertThrows(InvalidDateFormatException.class, () ->
-                sessionService.filterSessions(userId, invalidDate, pageable));
+        assertThrows(InvalidDateFormatException.class,
+                () -> sessionService.filterSessions(userId, invalidDate, pageable));
     }
 }
