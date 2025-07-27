@@ -101,4 +101,40 @@ class SessionServiceRevokeTests {
         verify(sessionRepository, never()).deleteById(any()); // no Redis call
         verify(userSessionRepository, never()).deleteBySessionId(any());
     }
+
+    @Test
+    void testGetActiveSessions_returnsEmptyListWhenNoActiveSessions() {
+        // Given
+        Page<Session> emptyPage = new PageImpl<>(List.of());
+
+        when(userSessionRepository.findAllByIsActiveTrue(any(Pageable.class))).thenReturn(emptyPage);
+
+        // When
+        CustomPageResponse<SessionResponseDto> result = sessionService.getActiveSessions(PageRequest.of(0, 10));
+
+        // Then
+        assertThat(result).isNotNull();
+        assertThat(result.getItems()).isEmpty();
+
+        verify(userSessionRepository).findAllByIsActiveTrue(any(Pageable.class));
+        verifyNoInteractions(sessionMapper);
+    }
+
+    @Test
+    void testRevokeSessionById_handlesMinimalSessionObject() {
+        // Given
+        String sessionId = "xyz-789";
+        Session session = new Session(); // minimal session with only ID present
+
+        when(userSessionRepository.findBySessionId(sessionId)).thenReturn(Optional.of(session));
+
+        // When
+        sessionService.revokeSessionById(sessionId);
+
+        // Then
+        verify(userSessionRepository).findBySessionId(sessionId);
+        verify(sessionRepository).deleteById(sessionId);
+        verify(userSessionRepository).deleteBySessionId(sessionId);
+    }
+
 }
