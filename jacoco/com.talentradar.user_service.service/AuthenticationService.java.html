@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthenticationService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">test</a> &gt; <a href="index.source.html" class="el_package">com.talentradar.user_service.service</a> &gt; <span class="el_source">AuthenticationService.java</span></div><h1>AuthenticationService.java</h1><pre class="source lang-java linenums">package com.talentradar.user_service.service;
+
+import java.util.Map;
+
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.Authentication;
+import org.springframework.stereotype.Service;
+
+import com.talentradar.user_service.dto.ResponseDto;
+import com.talentradar.user_service.dto.LoginRequestDto;
+import com.talentradar.user_service.dto.UserDto;
+import com.talentradar.user_service.model.CustomUserDetails;
+import com.talentradar.user_service.security.JwtUtils;
+
+@Service
+public class AuthenticationService {
+        private final AuthenticationManager authenticationManager;
+        private final JwtUtils jwtUtils;
+
+<span class="fc" id="L21">        public AuthenticationService(AuthenticationManager authenticationManager, JwtUtils jwtUtils) {</span>
+<span class="fc" id="L22">                this.authenticationManager = authenticationManager;</span>
+<span class="fc" id="L23">                this.jwtUtils = jwtUtils;</span>
+<span class="fc" id="L24">        }</span>
+
+        public Map&lt;String, Object&gt; login(LoginRequestDto loginRequest) {
+
+                // Authenticate user with username or email
+<span class="fc" id="L29">                Authentication authentication = authenticationManager.authenticate(</span>
+                                new UsernamePasswordAuthenticationToken(
+<span class="fc" id="L31">                                                loginRequest.getEmail(),</span>
+<span class="fc" id="L32">                                                loginRequest.getPassword()));</span>
+
+                // Get authenticated user details
+<span class="fc" id="L35">                CustomUserDetails userDetails = (CustomUserDetails) authentication.getPrincipal();</span>
+                // Generate JWT token
+<span class="fc" id="L37">                String token = jwtUtils.generateJwtTokenFromUserId(userDetails);</span>
+
+<span class="fc" id="L39">                UserDto userDto = UserDto.builder()</span>
+<span class="fc" id="L40">                                .id(userDetails.getUserId())</span>
+<span class="fc" id="L41">                                .email(userDetails.getEmail())</span>
+<span class="fc" id="L42">                                .username(userDetails.getUsername())</span>
+<span class="fc" id="L43">                                .fullName(userDetails.getUser().getFullName())</span>
+<span class="fc" id="L44">                                .role(userDetails.getRoleName())</span>
+<span class="fc" id="L45">                                .build();</span>
+
+<span class="fc" id="L47">                Map&lt;String, UserDto&gt; userMap = Map.of(&quot;user&quot;, userDto);</span>
+
+<span class="fc" id="L49">                ResponseDto loginResponseDto = ResponseDto.builder()</span>
+<span class="fc" id="L50">                                .status(true)</span>
+<span class="fc" id="L51">                                .message(&quot;Login successful&quot;)</span>
+<span class="fc" id="L52">                                .data(userMap)</span>
+<span class="fc" id="L53">                                .errors(null)</span>
+<span class="fc" id="L54">                                .build();</span>
+
+<span class="fc" id="L56">                return Map.of(&quot;token&quot;, token, &quot;loginResponse&quot;, loginResponseDto);</span>
+
+        }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>SmtpEmailService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">test</a> &gt; <a href="index.source.html" class="el_package">com.talentradar.user_service.service.impl</a> &gt; <span class="el_source">SmtpEmailService.java</span></div><h1>SmtpEmailService.java</h1><pre class="source lang-java linenums">package com.talentradar.user_service.service.impl;
+
+import com.talentradar.user_service.service.interfaces.EmailService;
+import jakarta.mail.MessagingException;
+import jakarta.mail.internet.MimeMessage;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.context.annotation.Profile;
+import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.MimeMessageHelper;
+import org.springframework.stereotype.Service;
+
+@Service
+@Profile(&quot;prod&quot;)
+@RequiredArgsConstructor
+public class SmtpEmailService implements EmailService {
+
+    private final JavaMailSender mailSender;
+
+    @Value(&quot;${app.notification.email.from}&quot;)
+    private String fromEmail;
+
+    @Value(&quot;${app.notification.email.subject.prefix}&quot;)
+    private String subjectPrefix;
+
+    @Override
+    public void sendRegistrationInvite(String toEmail, String inviteLink) {
+<span class="fc" id="L28">        MimeMessage mimeMessage = mailSender.createMimeMessage();</span>
+        try {
+<span class="fc" id="L30">            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true, &quot;UTF-8&quot;);</span>
+<span class="fc" id="L31">            helper.setFrom(fromEmail);</span>
+<span class="fc" id="L32">            helper.setTo(toEmail);</span>
+<span class="fc" id="L33">            helper.setSubject(subjectPrefix + &quot; Registration Invitation&quot;);</span>
+
+<span class="fc" id="L35">            String htmlContent = &quot;&quot;&quot;</span>
+                &lt;!DOCTYPE html&gt;
+                &lt;html lang=&quot;en&quot;&gt;
+                &lt;head&gt;
+                    &lt;meta charset=&quot;UTF-8&quot;&gt;
+                    &lt;meta name=&quot;viewport&quot; content=&quot;width=device-width, initial-scale=1.0&quot;&gt;
+                    &lt;title&gt;Registration Invitation&lt;/title&gt;
+                    &lt;style&gt;
+                        body {
+                            font-family: Arial, sans-serif;
+                            background-color: #f4f4f4;
+                            margin: 0;
+                            padding: 20px;
+                        }
+                        .container {
+                            background-color: #ffffff;
+                            padding: 30px;
+                            border-radius: 8px;
+                            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+                            max-width: 600px;
+                            margin: auto;
+                        }
+                        .button {
+                            background-color: #007bff;
+                            color: white;
+                            padding: 12px 25px;
+                            text-align: center;
+                            text-decoration: none;
+                            display: inline-block;
+                            font-size: 16px;
+                            border-radius: 5px;
+                            font-weight: bold;
+                        }
+                        p {
+                            font-size: 16px;
+                            line-height: 1.5;
+                        }
+                    &lt;/style&gt;
+                &lt;/head&gt;
+                &lt;body&gt;
+                    &lt;div class=&quot;container&quot;&gt;
+                        &lt;h2&gt;You're Invited!&lt;/h2&gt;
+                        &lt;p&gt;You have been invited to join our platform. Please click the button below to complete your registration:&lt;/p&gt;
+                        &lt;p&gt;&lt;a href=\&quot;%s\&quot; class=\&quot;button\&quot;&gt;Complete Registration&lt;/a&gt;&lt;/p&gt;
+                        &lt;p&gt;This link will expire in 10 minutes.&lt;/p&gt;
+                        &lt;hr&gt;
+                        &lt;p&gt;&lt;small&gt;If you did not request this invitation, please disregard this email.&lt;/small&gt;&lt;/p&gt;
+                    &lt;/div&gt;
+                &lt;/body&gt;
+                &lt;/html&gt;
+<span class="fc" id="L85">                &quot;&quot;&quot;.formatted(inviteLink);</span>
+
+<span class="fc" id="L87">            helper.setText(htmlContent, true);</span>
+<span class="fc" id="L88">            mailSender.send(mimeMessage);</span>
+<span class="nc" id="L89">        } catch (MessagingException e) {</span>
+            // Consider a more robust error handling strategy
+<span class="nc" id="L91">            throw new RuntimeException(&quot;Failed to send email&quot;, e);</span>
+<span class="fc" id="L92">        }</span>
+<span class="fc" id="L93">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

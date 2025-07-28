@@ -1,0 +1,114 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>AuthController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">test</a> &gt; <a href="index.source.html" class="el_package">com.talentradar.user_service.controller</a> &gt; <span class="el_source">AuthController.java</span></div><h1>AuthController.java</h1><pre class="source lang-java linenums">package com.talentradar.user_service.controller;
+
+import java.util.Map;
+
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import com.talentradar.user_service.dto.CompleteRegistrationRequest;
+import com.talentradar.user_service.dto.InviteUserRequest;
+import com.talentradar.user_service.dto.LoginRequestDto;
+import com.talentradar.user_service.dto.ResponseDto;
+import com.talentradar.user_service.dto.UserResponse;
+import com.talentradar.user_service.exception.InvalidTokenException;
+import com.talentradar.user_service.model.User;
+import com.talentradar.user_service.service.AuthenticationService;
+import com.talentradar.user_service.service.UserService;
+
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+<span class="fc" id="L25">@Slf4j</span>
+@RestController
+@RequestMapping(&quot;/api/v1/auth&quot;)
+@RequiredArgsConstructor
+public class AuthController {
+
+    @Value(&quot;${spring.security.cookie.expiration:86400}&quot;)
+    private int cookieExpiration;
+
+    private final AuthenticationService authService;
+    private final UserService userService;
+
+    // Logout
+    @GetMapping(&quot;/logout&quot;)
+    public ResponseEntity&lt;ResponseDto&gt; signout() {
+        // Clear the token cookie by setting it with empty value and immediate
+        // expiration
+<span class="nc" id="L42">        HttpHeaders headers = new HttpHeaders();</span>
+<span class="nc" id="L43">        headers.add(HttpHeaders.SET_COOKIE, &quot;token=; HttpOnly; Path=/; Max-Age=0; SameSite=None&quot;);</span>
+
+<span class="nc" id="L45">        ResponseDto response = ResponseDto.builder()</span>
+<span class="nc" id="L46">                .status(true)</span>
+<span class="nc" id="L47">                .message(&quot;Logged out successfully&quot;)</span>
+<span class="nc" id="L48">                .errors(null)</span>
+<span class="nc" id="L49">                .data(null)</span>
+<span class="nc" id="L50">                .build();</span>
+
+<span class="nc" id="L52">        return ResponseEntity.ok()</span>
+<span class="nc" id="L53">                .headers(headers)</span>
+<span class="nc" id="L54">                .body(response);</span>
+    }
+
+    @PostMapping(&quot;/login&quot;)
+    public ResponseEntity&lt;Object&gt; signin(@RequestBody LoginRequestDto loginRequest) {
+<span class="fc" id="L59">        Map&lt;String, Object&gt; loginResponse = authService.login(loginRequest);</span>
+        // Put token in httpOnly cookie
+<span class="fc" id="L61">        HttpHeaders headers = new HttpHeaders();</span>
+
+        // Only for local dev, unsafe in production
+<span class="fc" id="L64">        headers.add(HttpHeaders.SET_COOKIE, &quot;token=&quot; + loginResponse.get(&quot;token&quot;)</span>
+                + &quot;; HttpOnly; Path=/; Max-Age=&quot; + cookieExpiration + &quot;; SameSite=None&quot;);
+
+<span class="fc" id="L67">        return ResponseEntity.ok()</span>
+<span class="fc" id="L68">                .headers(headers)</span>
+<span class="fc" id="L69">                .body(loginResponse.get(&quot;loginResponse&quot;));</span>
+
+    }
+
+    /**
+     * Initiates the user registration process.
+     * Admin creates a user with email and role, and an invite is sent to the user's
+     * email.
+     */
+    @PostMapping(&quot;/invite&quot;)
+    public ResponseEntity&lt;UserResponse&gt; initiateRegistration(@Valid @RequestBody InviteUserRequest inviteRequest) {
+<span class="fc" id="L80">        User newUser = userService.initiateRegistration(inviteRequest);</span>
+<span class="fc" id="L81">        return new ResponseEntity&lt;&gt;(UserResponse.fromUser(newUser), HttpStatus.CREATED);</span>
+    }
+
+    /**
+     * Completes the user registration process.
+     * User provides full name and password to complete registration.
+     */
+    @PatchMapping(&quot;/complete-registration&quot;)
+    public ResponseEntity&lt;UserResponse&gt; completeRegistration(
+            @RequestParam(&quot;token&quot;) String token,
+            @Valid @RequestBody CompleteRegistrationRequest request) {
+
+<span class="fc bfc" id="L93" title="All 2 branches covered.">        if (!request.getPassword().equals(request.getConfirmPassword())) {</span>
+<span class="fc" id="L94">            throw new InvalidTokenException(&quot;Password and confirmation do not match&quot;);</span>
+        }
+
+<span class="fc" id="L97">        User user = userService.completeRegistration(token, request);</span>
+<span class="fc" id="L98">        return ResponseEntity.ok(UserResponse.fromUser(user));</span>
+    }
+
+    /**
+     * Validates a registration token.
+     * Can be used to check if a registration token is valid before showing the
+     * registration form.
+     */
+    @GetMapping(&quot;/validate-registration-token&quot;)
+    public ResponseEntity&lt;Map&lt;String, String&gt;&gt; validateRegistrationToken(@RequestParam(&quot;token&quot;) String token) {
+<span class="fc" id="L108">        User user = userService.validateRegistrationToken(token);</span>
+<span class="fc" id="L109">        return ResponseEntity.ok(Map.of(</span>
+<span class="fc" id="L110">                &quot;email&quot;, user.getEmail(),</span>
+                &quot;status&quot;, &quot;VALID&quot;));
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

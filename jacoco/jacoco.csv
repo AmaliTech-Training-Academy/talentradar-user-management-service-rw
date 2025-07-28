@@ -1,0 +1,16 @@
+GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
+test,com.talentradar.user_service.service,AuthenticationService,0,70,0,0,0,24,0,2,0,2
+test,com.talentradar.user_service.service,UserService,11,631,0,26,3,164,0,31,0,18
+test,com.talentradar.user_service.service,CustomUserDetailsService,3,33,0,2,0,9,0,4,0,3
+test,com.talentradar.user_service.service,RoleService,0,37,0,0,0,12,0,2,0,2
+test,com.talentradar.user_service.service,ConsoleEmailService,22,0,0,0,6,0,3,0,3,0
+test,com.talentradar.user_service.service,SessionService,0,336,2,18,0,96,2,17,0,9
+test,com.talentradar.user_service.controller,AuthController,27,78,0,2,11,16,1,6,1,5
+test,com.talentradar.user_service.controller,SessionController,52,37,0,0,18,11,2,2,2,2
+test,com.talentradar.user_service.controller,RoleController,0,13,0,0,0,5,0,2,0,2
+test,com.talentradar.user_service.controller,UserController,0,30,0,0,0,8,0,3,0,3
+test,com.talentradar.user_service.model,CustomUserDetails,10,38,0,0,2,13,1,11,1,11
+test,com.talentradar.user_service.model,Role,4,0,0,0,2,0,1,0,1,0
+test,com.talentradar.user_service.model,User.UserStatus,0,15,0,0,0,3,0,1,0,1
+test,com.talentradar.user_service.model,User,14,0,0,0,6,0,2,0,2,0
+test,com.talentradar.user_service.service.impl,SmtpEmailService,7,42,0,0,2,11,0,1,0,1

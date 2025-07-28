@@ -1,0 +1,346 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="en"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>UserService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">test</a> &gt; <a href="index.source.html" class="el_package">com.talentradar.user_service.service</a> &gt; <span class="el_source">UserService.java</span></div><h1>UserService.java</h1><pre class="source lang-java linenums">package com.talentradar.user_service.service;
+
+import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
+
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.util.UriComponentsBuilder;
+
+import com.talentradar.user_service.config.RabbitConfig;
+import com.talentradar.user_service.dto.CompleteRegistrationRequest;
+import com.talentradar.user_service.dto.EventRole;
+import com.talentradar.user_service.dto.EventType;
+import com.talentradar.user_service.dto.InviteUserRequest;
+import com.talentradar.user_service.dto.PageInfo;
+import com.talentradar.user_service.dto.ResponseDto;
+import com.talentradar.user_service.dto.UserCreatedEvent;
+import com.talentradar.user_service.dto.UserDto;
+import com.talentradar.user_service.dto.UserNotFoundException;
+import com.talentradar.user_service.exception.InvalidTokenException;
+import com.talentradar.user_service.exception.ResourceAlreadyExistsException;
+import com.talentradar.user_service.exception.ResourceNotFoundException;
+import com.talentradar.user_service.model.Role;
+import com.talentradar.user_service.model.User;
+import com.talentradar.user_service.model.User.UserStatus;
+import com.talentradar.user_service.repository.RoleRepository;
+import com.talentradar.user_service.repository.UserRepository;
+import com.talentradar.user_service.service.interfaces.EmailService;
+
+import io.jsonwebtoken.Claims;
+import io.jsonwebtoken.Jwts;
+import io.jsonwebtoken.security.Keys;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
+<span class="fc" id="L47">@Slf4j</span>
+@Service
+@RequiredArgsConstructor
+public class UserService {
+    private final UserRepository userRepository;
+    private final RoleRepository roleRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final EmailService emailService;
+    // private final KafkaService kafkaService;
+
+    private final RabbitTemplate rabbitTemplate;
+
+    @Value(&quot;${app.registration.token.secret}&quot;)
+    private String registrationTokenSecret;
+
+    @Value(&quot;${app.registration.token.expiration-ms}&quot;)
+    private long registrationTokenExpirationMs;
+
+    @Value(&quot;${app.base-url}&quot;)
+    private String baseUrl;
+
+    public ResponseDto getMe(UUID userId) {
+<span class="fc" id="L69">        User user = userRepository.findById(userId)</span>
+<span class="fc" id="L70">                .orElseThrow(() -&gt; new UserNotFoundException(&quot;User not found&quot;));</span>
+<span class="fc" id="L71">        UserDto userDto = UserDto.builder()</span>
+<span class="fc" id="L72">                .id(user.getId())</span>
+<span class="fc" id="L73">                .email(user.getEmail())</span>
+<span class="fc" id="L74">                .username(user.getUsername())</span>
+<span class="fc" id="L75">                .fullName(user.getFullName())</span>
+<span class="fc" id="L76">                .role(user.getRole().getRoleName())</span>
+<span class="fc" id="L77">                .build();</span>
+
+<span class="fc" id="L79">        Map&lt;String, UserDto&gt; userMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L80">        userMap.put(&quot;user&quot;, userDto);</span>
+
+        // Create and return
+<span class="fc" id="L83">        ResponseDto loginResponseDto = ResponseDto.builder()</span>
+<span class="fc" id="L84">                .status(true)</span>
+<span class="fc" id="L85">                .message(&quot;User retrieved successfully&quot;)</span>
+<span class="fc" id="L86">                .data(userMap)</span>
+<span class="fc" id="L87">                .errors(null)</span>
+<span class="fc" id="L88">                .build();</span>
+<span class="fc" id="L89">        return loginResponseDto;</span>
+    }
+
+    // Get All Users
+    public ResponseDto getAllUsers(int page, int size, UUID roleId) {
+
+<span class="fc bfc" id="L95" title="All 2 branches covered.">        int pageNumber = page &lt;= 0 ? page : page - 1;</span>
+
+        Page&lt;User&gt; usersPage;
+<span class="fc bfc" id="L98" title="All 2 branches covered.">        if (roleId != null) {</span>
+<span class="fc" id="L99">            Role role = roleRepository.findById(roleId)</span>
+<span class="fc" id="L100">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Role not found with id: &quot; + roleId));</span>
+<span class="fc" id="L101">            usersPage = userRepository.findByRole(role, PageRequest.of(pageNumber, size));</span>
+<span class="fc" id="L102">        } else {</span>
+<span class="fc" id="L103">            usersPage = userRepository.findAll(PageRequest.of(pageNumber, size));</span>
+        }
+
+<span class="fc" id="L106">        Page&lt;UserDto&gt; userDtoPage = UserDto.fromPage(usersPage);</span>
+
+        // Create PageInfo
+<span class="fc" id="L109">        PageInfo pageInfo = new PageInfo(</span>
+<span class="fc" id="L110">                usersPage.getNumber() + 1, // Convert to 1-based index</span>
+<span class="fc" id="L111">                usersPage.getSize(),</span>
+<span class="fc" id="L112">                usersPage.getTotalElements(),</span>
+<span class="fc" id="L113">                usersPage.getTotalPages(),</span>
+<span class="fc" id="L114">                usersPage.hasNext(),</span>
+<span class="fc" id="L115">                usersPage.hasPrevious(),</span>
+<span class="fc" id="L116">                usersPage.isFirst(),</span>
+<span class="fc" id="L117">                usersPage.isLast());</span>
+
+<span class="fc" id="L119">        Map&lt;String, Object&gt; pageResponseMap = new HashMap&lt;&gt;();</span>
+<span class="fc" id="L120">        pageResponseMap.put(&quot;users&quot;, userDtoPage.getContent());</span>
+<span class="fc" id="L121">        pageResponseMap.put(&quot;pageInfo&quot;, pageInfo);</span>
+
+<span class="fc" id="L123">        ResponseDto apiResponseRefined = ResponseDto.builder()</span>
+<span class="fc" id="L124">                .status(true)</span>
+<span class="fc" id="L125">                .message(&quot;Users retrieved successfully&quot;)</span>
+<span class="fc" id="L126">                .data(pageResponseMap)</span>
+<span class="fc" id="L127">                .errors(null)</span>
+<span class="fc" id="L128">                .build();</span>
+
+<span class="fc" id="L130">        return apiResponseRefined;</span>
+    }
+
+    @Transactional
+    public User initiateRegistration(InviteUserRequest request) {
+        // Check if user with email already exists
+<span class="fc bfc" id="L136" title="All 2 branches covered.">        if (userRepository.findByEmail(request.getEmail()).isPresent()) {</span>
+<span class="fc" id="L137">            throw new ResourceAlreadyExistsException(&quot;Email already in use&quot;);</span>
+        }
+
+        // Find the role by ID
+<span class="fc" id="L141">        Role role = roleRepository.findById(request.getRoleId())</span>
+<span class="fc" id="L142">                .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Role not found with id: &quot; + request.getRoleId()));</span>
+
+        // Create new user
+<span class="fc" id="L145">        User user = new User();</span>
+<span class="fc" id="L146">        user.setEmail(request.getEmail());</span>
+<span class="fc" id="L147">        user.setRole(role);</span>
+
+<span class="fc" id="L149">        User savedUser = userRepository.save(user);</span>
+
+        // Generate and send registration token
+<span class="fc" id="L152">        String token = generateRegistrationToken(savedUser);</span>
+<span class="fc" id="L153">        String inviteLink = createInvitationLink(savedUser.getEmail(), token);</span>
+
+        // Send email with the invite link
+<span class="fc" id="L156">        emailService.sendRegistrationInvite(savedUser.getEmail(), inviteLink);</span>
+
+        // // Fire event if user is developer or manager
+<span class="fc bfc" id="L159" title="All 2 branches covered.">        if (role.getRoleName().equalsIgnoreCase(&quot;DEVELOPER&quot;)) {</span>
+
+<span class="fc" id="L161">            Role managerRole = roleRepository.findByRoleName(&quot;MANAGER&quot;)</span>
+<span class="fc" id="L162">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;Manager role not found&quot;));</span>
+<span class="fc" id="L163">            List&lt;User&gt; managerUsers = userRepository.findByRole(managerRole);</span>
+<span class="fc bfc" id="L164" title="All 2 branches covered.">            if (managerUsers.isEmpty()) {</span>
+<span class="fc" id="L165">                throw new ResourceNotFoundException(&quot;No manager found to assign to the developer&quot;);</span>
+            }
+
+<span class="fc" id="L168">            UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()</span>
+<span class="fc" id="L169">                    .eventType(EventType.USER_CREATED)</span>
+<span class="fc" id="L170">                    .userId(savedUser.getId())</span>
+<span class="fc" id="L171">                    .managerId(managerUsers.get(0).getId())</span>
+<span class="fc" id="L172">                    .fullName(savedUser.getFullName())</span>
+<span class="fc" id="L173">                    .username(savedUser.getUsername())</span>
+<span class="fc" id="L174">                    .email(savedUser.getEmail())</span>
+<span class="fc" id="L175">                    .role(EventRole.DEVELOPER)</span>
+<span class="fc" id="L176">                    .timestamp(LocalDateTime.now())</span>
+<span class="fc" id="L177">                    .eventId(UUID.randomUUID().toString())</span>
+<span class="fc" id="L178">                    .source(&quot;user-service&quot;)</span>
+<span class="fc" id="L179">                    .build();</span>
+
+            // kafkaService.sendUserCreatedEvent(userCreatedEvent);
+<span class="fc" id="L182">            rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_USER_CREATED, userCreatedEvent);</span>
+            // Create UserCreatedEvent for Developer and set manager id
+<span class="fc" id="L184">            log.info(&quot;Developer created event sent for user: {}&quot;, savedUser.getEmail());</span>
+<span class="fc bfc" id="L185" title="All 2 branches covered.">        } else if (role.getRoleName().equalsIgnoreCase(&quot;MANAGER&quot;)) {</span>
+<span class="fc" id="L186">            UserCreatedEvent userCreatedEvent = new UserCreatedEvent().builder()</span>
+<span class="fc" id="L187">                    .eventType(EventType.USER_CREATED)</span>
+<span class="fc" id="L188">                    .userId(savedUser.getId())</span>
+<span class="fc" id="L189">                    .fullName(savedUser.getFullName())</span>
+<span class="fc" id="L190">                    .username(savedUser.getUsername())</span>
+<span class="fc" id="L191">                    .email(savedUser.getEmail())</span>
+<span class="fc" id="L192">                    .role(EventRole.MANAGER)</span>
+<span class="fc" id="L193">                    .timestamp(LocalDateTime.now())</span>
+<span class="fc" id="L194">                    .eventId(UUID.randomUUID().toString())</span>
+<span class="fc" id="L195">                    .source(&quot;user-service&quot;)</span>
+<span class="fc" id="L196">                    .build();</span>
+
+<span class="fc" id="L198">            rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_USER_CREATED, userCreatedEvent);</span>
+<span class="fc" id="L199">            log.info(&quot;Manager created event sent for user: {}&quot;, savedUser.getEmail());</span>
+        }
+
+<span class="fc" id="L202">        return savedUser;</span>
+    }
+
+    @Transactional
+    public User completeRegistration(String token, CompleteRegistrationRequest request) {
+<span class="fc bfc" id="L207" title="All 4 branches covered.">        if (token == null || token.trim().isEmpty()) {</span>
+<span class="fc" id="L208">            throw new InvalidTokenException(&quot;Token cannot be empty&quot;);</span>
+        }
+
+        // Validate and parse the token
+<span class="fc" id="L212">        Claims claims = parseAndValidateToken(token);</span>
+
+        try {
+            // Get user ID from token
+<span class="fc" id="L216">            UUID userId = UUID.fromString(claims.getSubject());</span>
+
+            // Find the user
+<span class="fc" id="L219">            User user = userRepository.findById(userId)</span>
+<span class="fc" id="L220">                    .orElseThrow(() -&gt; new ResourceNotFoundException(&quot;User not found&quot;));</span>
+
+            // Check if user is already active
+<span class="fc bfc" id="L223" title="All 2 branches covered.">            if (user.getStatus() == UserStatus.ACTIVE) {</span>
+<span class="fc" id="L224">                throw new IllegalStateException(&quot;User is already active&quot;);</span>
+            }
+
+            // Validate password and confirm password match
+<span class="fc bfc" id="L228" title="All 2 branches covered.">            if (!request.getPassword().equals(request.getConfirmPassword())) {</span>
+<span class="fc" id="L229">                throw new IllegalArgumentException(&quot;Password and confirm password do not match&quot;);</span>
+            }
+
+            // Update user details
+<span class="fc" id="L233">            user.setFullName(request.getFullName());</span>
+<span class="fc" id="L234">            user.setUsername(generateUsername(request.getFullName()));</span>
+<span class="fc" id="L235">            user.setPassword(passwordEncoder.encode(request.getPassword()));</span>
+<span class="fc" id="L236">            user.setStatus(UserStatus.ACTIVE);</span>
+
+<span class="fc" id="L238">            fireEventWhenUserUpdated(user);</span>
+
+<span class="fc" id="L240">            return userRepository.save(user);</span>
+
+<span class="fc" id="L242">        } catch (IllegalArgumentException ex) {</span>
+<span class="fc" id="L243">            log.error(&quot;Error during registration completion: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L244">            throw new InvalidTokenException(&quot;Invalid user ID in token&quot;);</span>
+        }
+    }
+
+    private String generateRegistrationToken(User user) {
+<span class="fc" id="L249">        Instant now = Instant.now();</span>
+<span class="fc" id="L250">        Instant expiryDate = now.plusMillis(registrationTokenExpirationMs);</span>
+
+<span class="fc" id="L252">        return Jwts.builder()</span>
+<span class="fc" id="L253">                .subject(user.getId().toString())</span>
+<span class="fc" id="L254">                .claim(&quot;email&quot;, user.getEmail())</span>
+<span class="fc" id="L255">                .claim(&quot;roleId&quot;, user.getRole().getId().toString())</span>
+<span class="fc" id="L256">                .issuedAt(Date.from(now))</span>
+<span class="fc" id="L257">                .expiration(Date.from(expiryDate))</span>
+<span class="fc" id="L258">                .signWith(getSigningKey(), Jwts.SIG.HS256)</span>
+<span class="fc" id="L259">                .compact();</span>
+    }
+
+    private Claims parseAndValidateToken(String token) {
+        try {
+            // For JJWT 0.11.x
+<span class="fc" id="L265">            return Jwts.parser()</span>
+<span class="fc" id="L266">                    .verifyWith(Keys.hmacShaKeyFor(registrationTokenSecret.getBytes(StandardCharsets.UTF_8)))</span>
+<span class="fc" id="L267">                    .build()</span>
+<span class="fc" id="L268">                    .parseSignedClaims(token)</span>
+<span class="fc" id="L269">                    .getPayload();</span>
+<span class="fc" id="L270">        } catch (io.jsonwebtoken.ExpiredJwtException ex) {</span>
+<span class="fc" id="L271">            log.error(&quot;Token has expired: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L272">            throw new InvalidTokenException(&quot;Registration token has expired&quot;);</span>
+<span class="fc" id="L273">        } catch (io.jsonwebtoken.JwtException | IllegalArgumentException ex) {</span>
+<span class="fc" id="L274">            log.error(&quot;Invalid token: {}&quot;, ex.getMessage());</span>
+<span class="fc" id="L275">            throw new InvalidTokenException(&quot;Invalid registration token&quot;);</span>
+        }
+    }
+
+    private javax.crypto.SecretKey getSigningKey() {
+<span class="fc" id="L280">        byte[] keyBytes = registrationTokenSecret.getBytes(StandardCharsets.UTF_8);</span>
+<span class="fc" id="L281">        return new javax.crypto.spec.SecretKeySpec(keyBytes, &quot;HmacSHA256&quot;);</span>
+    }
+
+    private String createInvitationLink(String email, String token) {
+<span class="fc" id="L285">        return UriComponentsBuilder.fromHttpUrl(baseUrl)</span>
+<span class="fc" id="L286">                .path(&quot;/register&quot;)</span>
+<span class="fc" id="L287">                .queryParam(&quot;email&quot;, email)</span>
+<span class="fc" id="L288">                .queryParam(&quot;token&quot;, token)</span>
+<span class="fc" id="L289">                .toUriString();</span>
+    }
+
+    private String generateUsername(String fullName) {
+        // Convert to lowercase and replace spaces with dots
+<span class="fc" id="L294">        String baseUsername = fullName.trim().toLowerCase().replaceAll(&quot;\\s+&quot;, &quot;.&quot;);</span>
+<span class="fc" id="L295">        String username = baseUsername;</span>
+<span class="fc" id="L296">        int counter = 1;</span>
+
+        // Ensure username is unique
+<span class="fc bfc" id="L299" title="All 2 branches covered.">        while (userRepository.findByUsername(username).isPresent()) {</span>
+<span class="fc" id="L300">            username = baseUsername + counter;</span>
+<span class="fc" id="L301">            counter++;</span>
+        }
+
+<span class="fc" id="L304">        return username;</span>
+    }
+
+    /**
+     * Validates a registration token and returns the associated user if valid.
+     *
+     * @param token The registration token to validate
+     * @return The user associated with the token
+     * @throws InvalidTokenException if the token is invalid or expired
+     */
+    public User validateRegistrationToken(String token) {
+<span class="fc bfc" id="L315" title="All 4 branches covered.">        if (token == null || token.trim().isEmpty()) {</span>
+<span class="fc" id="L316">            throw new InvalidTokenException(&quot;Token cannot be empty&quot;);</span>
+        }
+
+<span class="fc" id="L319">        Claims claims = parseAndValidateToken(token);</span>
+
+        try {
+<span class="fc" id="L322">            UUID userId = UUID.fromString(claims.getSubject());</span>
+<span class="fc" id="L323">            return userRepository.findById(userId)</span>
+<span class="fc" id="L324">                    .orElseThrow(() -&gt; new InvalidTokenException(&quot;User not found for this token&quot;));</span>
+<span class="nc" id="L325">        } catch (IllegalArgumentException ex) {</span>
+<span class="nc" id="L326">            log.error(&quot;Invalid user ID in token: {}&quot;, ex.getMessage());</span>
+<span class="nc" id="L327">            throw new InvalidTokenException(&quot;Invalid user ID in token&quot;);</span>
+        }
+    }
+
+    private void fireEventWhenUserUpdated(User user) {
+<span class="fc" id="L332">        UserCreatedEvent userUpdatedEvent = new UserCreatedEvent().builder()</span>
+<span class="fc" id="L333">                .eventType(EventType.USER_UPDATED)</span>
+<span class="fc" id="L334">                .userId(user.getId())</span>
+<span class="fc" id="L335">                .fullName(user.getFullName())</span>
+<span class="fc" id="L336">                .username(user.getUsername())</span>
+<span class="fc" id="L337">                .eventId(UUID.randomUUID().toString())</span>
+<span class="fc" id="L338">                .timestamp(LocalDateTime.now())</span>
+<span class="fc" id="L339">                .source(&quot;user-service&quot;)</span>
+<span class="fc" id="L340">                .build();</span>
+
+<span class="fc" id="L342">        rabbitTemplate.convertAndSend(RabbitConfig.QUEUE_USER_UPDATED, userUpdatedEvent);</span>
+<span class="fc" id="L343">        log.info(&quot;User updated event sent for user: {}&quot;, user.getEmail());</span>
+<span class="fc" id="L344">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>
