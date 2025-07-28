@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.*;
 import com.talentradar.user_service.dto.CompleteRegistrationRequest;
 import com.talentradar.user_service.dto.InviteUserRequest;
 import com.talentradar.user_service.dto.LoginRequestDto;
+import com.talentradar.user_service.dto.ResponseDto;
 import com.talentradar.user_service.dto.UserResponse;
 import com.talentradar.user_service.exception.InvalidTokenException;
 import com.talentradar.user_service.model.User;
@@ -32,6 +33,26 @@ public class AuthController {
 
     private final AuthenticationService authService;
     private final UserService userService;
+
+    // Logout
+    @GetMapping("/logout")
+    public ResponseEntity<ResponseDto> signout() {
+        // Clear the token cookie by setting it with empty value and immediate
+        // expiration
+        HttpHeaders headers = new HttpHeaders();
+        headers.add(HttpHeaders.SET_COOKIE, "token=; HttpOnly; Path=/; Max-Age=0; SameSite=None");
+
+        ResponseDto response = ResponseDto.builder()
+                .status(true)
+                .message("Logged out successfully")
+                .errors(null)
+                .data(null)
+                .build();
+
+        return ResponseEntity.ok()
+                .headers(headers)
+                .body(response);
+    }
 
     @PostMapping("/login")
     public ResponseEntity<Object> signin(@RequestBody LoginRequestDto loginRequest) {
